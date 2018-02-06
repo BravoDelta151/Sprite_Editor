@@ -43,7 +43,7 @@ class GUI:
 
         # set_cursor_from_image(self.cwd+'\\paintbrush_cursor_1.png', (4, 21))
         self.tile_editor = Tile_Editor(10,10, 512, 512, self.palette)
-        self.strip_map = Strip_Map(self.width - 370 , 10,get_dir_path("images", "16x256.bmp"))
+        self.strip_map = Strip_Map(self.width - 390 , 10,get_dir_path("images", "16x256.bmp"))
         
         self.running = True
 
@@ -115,7 +115,7 @@ class GUI:
             if self.strip_map:
                 self.strip_map.load_strip(full_filename)
             else:
-                self.strip_map = Strip_Map(self.width - 370 , 10, full_filename)
+                self.strip_map = Strip_Map(self.width - 390 , 10, full_filename)
         else:
             print("Invalid file name")
 

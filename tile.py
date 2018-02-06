@@ -103,14 +103,16 @@ class Tile_Editor:
             self.image = pygame.Surface((width, height))
             self.image.fill((100,100,100))
 
-        self.img = pygame.Surface((16,16)).convert()
-        self.img.set_colorkey((255,0,255), pygame.RLEACCEL)
+        self.preview = pygame.Surface((16,16)).convert()
+        self.preview.set_colorkey((255,0,255), pygame.RLEACCEL)
 
         pix_size = width // 16
         # x, y, size
         self.pixels = [[Pixel(self, x * pix_size ,y * pix_size ,pix_size) for y in range(pix_size)] for x in range(pix_size)]
         self.pixel_size = pix_size
 
+        # add brush button and fill button
+        # TODO: Implement brush button and fill button
         sx = self.x + self.width + 10
         sy =self.y 
         self.brush_btn = load_file(get_dir_path("images", "brush_btn.png")).convert()
@@ -121,6 +123,17 @@ class Tile_Editor:
         self.fill_btn_rect = pygame.Rect((sx, sy), self.brush_btn.get_size())
         sy += self.fill_btn.get_height() + 10
 
+        # Add save buttons
+        self.save_btn = load_file(get_dir_path("images", "save_btn.png")).convert()
+        self.save_btn_rect = pygame.Rect((sx,sy), self.save_btn.get_size())
+        sy += self.save_btn.get_height() + 10
+
+        self.saveas_btn = load_file(get_dir_path("images", "saveas_btn.png")).convert()
+        self.saveas_btn_rect = pygame.Rect((sx,sy), self.saveas_btn.get_size())
+        sy += self.saveas_btn.get_height() + 10
+
+        # Add grid and 2x grid backgrounds
+        # TODO: Consider adding button to hide grid 
         self.grid = load_file(get_dir_path("images", "grid.png")).convert()
         sw, sh = self.grid.get_size()
         self.grid_rect = pygame.Rect(sx, sy, sw, sh)
@@ -129,11 +142,11 @@ class Tile_Editor:
         self.gridx2 = pygame.transform.scale2x(self.grid)
         self.gridx2_rect = pygame.Rect(sx, sy, sw, sh)
 
-        ###############
-                    
-        ##############
+        # options to show/hide previews 
         self.show_actual_size = True
         self.show_double_size = True
+
+        # dirty flag to determine if img needs updated
         self.dirty = True
 
     def _update(self):
@@ -145,7 +158,7 @@ class Tile_Editor:
             for x in range(l):
                 for y in range(l):
                     self.pixels[x][y].draw(self.image)
-                    self.img.set_at((x,y), self.pixels[x][y].get_color())
+                    self.preview.set_at((x,y), self.pixels[x][y].get_color())
             self.dirty = False
 
     def _check_pixels_pos(self, pos):
@@ -165,7 +178,7 @@ class Tile_Editor:
             # l = self.pixel_size # len(self.pixels)
             # print('set_image: image size = {} <> {}'.format(image.get_size(), l))
             w, h = image.get_size()
-            self.img = image
+            # self.preview = image
             for x in range(w):
                 for y in range(h):
                     color = image.get_at((x,y))
@@ -186,12 +199,18 @@ class Tile_Editor:
             if x >= 0 and y >= 0:
                 color = self.palette.get_color(button)
                 self.pixels[x][y].set(color)
-
+        # TODO:
         elif self.brush_btn_rect.collidepoint(pos):
             print("brush btn clicked")
 
         elif self.fill_btn_rect.collidepoint(pos):
             print("fill btn clicked")
+
+        elif self.save_btn_rect.collidepoint(pos):
+            print("save btn clicked")
+
+        elif self.saveas_btn_rect.collidepoint(pos):
+            print("save as btn clicked")
 
     def draw(self, surface):
         '''
@@ -203,15 +222,15 @@ class Tile_Editor:
         surface.blit(self.image, (self.x, self.y))
 
         surface.blit(self.brush_btn, self.brush_btn_rect.topleft)
-
         surface.blit(self.fill_btn, self.fill_btn_rect.topleft)
-
+        surface.blit(self.save_btn, self.save_btn_rect.topleft)
+        surface.blit(self.saveas_btn, self.saveas_btn_rect.topleft)
         
         if self.show_actual_size:
             surface.blit(self.grid, self.grid_rect.topleft)
-            surface.blit(self.img, self.grid_rect.topleft)
+            surface.blit(self.preview, self.grid_rect.topleft)
         if self.show_double_size:
-            i2x = pygame.transform.scale2x(self.img)
+            i2x = pygame.transform.scale2x(self.preview)
             # i2x.set_colorkey((255,0,255), pygame.RLEACCEL)
             surface.blit(self.gridx2,self.gridx2_rect.topleft)
             surface.blit(i2x,self.gridx2_rect.topleft)
