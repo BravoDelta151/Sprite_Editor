@@ -1,23 +1,13 @@
 import os
 import pygame
 from pygame.locals import *
+from helpers import *
 from sprite import *
 from tile import *
 from strip_map import *
 from message_box import *
 
-def get_file_list(dir):
-    files = []
-    cwd = os.getcwd()
-    path = '{}\\{}'.format(cwd, dir)
-    # print("Checking {}".format(path))
-    lst = os.listdir(path)
-    for f in lst:
-        # print(f)
-        if not f.startswith('.'):
-            files.append(f)
 
-    return files
 
 class GUI:
 
@@ -32,9 +22,8 @@ class GUI:
 
         self.FPS = 30
         self.clock = pygame.time.Clock()
-        self.font = pygame.font.SysFont('arial', 16)
-        self.cwd = os.getcwd()
-
+        self.font = pygame.font.SysFont('arial', 16)      
+        
         self.screen = pygame.display.set_mode((self.width, self.height))
         pygame.display.set_caption("Sprite Viewer")
 
@@ -48,14 +37,14 @@ class GUI:
         self.screen.blit(background, (0, 0))
         self.sprites = []
         
-        data_dir = os.path.join(self.cwd, 'data')
-        self.palette = Palette.init_from_file(os.path.join(data_dir, 'palette_nes_decimal.txt'))
+        
+        self.palette = Palette.init_from_file(get_dir_path("data", "palette_nes_decimal.txt"))
         self.show_palette = True
 
         # set_cursor_from_image(self.cwd+'\\paintbrush_cursor_1.png', (4, 21))
         self.tile_editor = Tile_Editor(10,10, 512, 512, self.palette)
-
-        self.strip_map = None
+        self.strip_map = Strip_Map(self.width - 370 , 10,get_dir_path("images", "16x256.bmp"))
+        
         self.running = True
 
     def handle_events(self):
@@ -120,10 +109,13 @@ class GUI:
         else:
             file_name = x
 
-        full_filename = '{}\\images\\{}'.format(self.cwd, file_name)
+        full_filename = get_dir_path("images", file_name)
         check = os.path.isfile(full_filename)
-        if check:            
-           self.strip_map = Strip_Map(self.width - 300 , 90, full_filename)
+        if check:     
+            if self.strip_map:
+                self.strip_map.load_strip(full_filename)
+            else:
+                self.strip_map = Strip_Map(self.width - 370 , 10, full_filename)
         else:
             print("Invalid file name")
 

@@ -1,5 +1,6 @@
 import pygame
 from sprite import *
+from helpers import *
 
 class Strip_Map:
 
@@ -7,28 +8,34 @@ class Strip_Map:
 
         self.x = x
         self.y = y
-
-        try:
-            self.image = pygame.image.load(filename).convert()
-        except pygame.error:
-            print ("Unable to load spritesheet image: {}".format(filename))    
-            raise SystemExit(pygame.get_error())
-
-        # image, rect, count, colorkey=None, loop=False, frames=1
-        
-        self.image2x = pygame.transform.scale2x(self.image)
-        self.rect = pygame.Rect((x, y), self.image.get_size())
-        self.rect2x = pygame.Rect(self.x + self.rect.width + 10, y, self.rect.width * 2, self.rect.height * 2)
-
-        self.sprite_strip = SpriteStripAnim(self.image, (0,0,16,16), 16, colorkey = (255,0,255))
-
-        self.selected_cell = 0
-        self.selected_rect = pygame.Rect(x, y, 16, 16)
-        self.selected_rect2x = pygame.Rect(self.rect.x + self.rect.width + 10,y, 32, 32)
+        self.load_strip(filename)
+        # try:
+        #     self.image = pygame.image.load(filename).convert()
+        # except pygame.error:
+        #     print ("Unable to load spritesheet image: {}".format(filename))    
+        #     raise SystemExit(pygame.get_error())
 
     def _get_selected_frame(self):
         return self.sprite_strip.get_frame(self.selected_cell)
 
+    def load_strip(self, filename):
+
+        self.image = load_file(filename)
+
+        if self.image:        
+            self.image2x = pygame.transform.scale2x(self.image)
+            self.rect = pygame.Rect((self.x, self.y), self.image.get_size())
+            self.rect2x = pygame.Rect(self.x + self.rect.width + 10, self.y, self.rect.width * 2, self.rect.height * 2)
+
+            # image, rect, count, colorkey=None, loop=False, frames=1
+            self.sprite_strip = SpriteStripAnim(self.image, (0,0,16,16), 16, colorkey = (255,0,255))
+            self.selected_cell = 0
+            self.selected_rect = pygame.Rect(self.x, self.y, 16, 16)
+            self.selected_rect2x = pygame.Rect(self.rect.x + self.rect.width + 10,self.y, 32, 32)
+
+            return True 
+        else:
+            return False
 
     def check_click(self, pos):
         return self.rect.collidepoint(pos) or self.rect2x.collidepoint(pos)

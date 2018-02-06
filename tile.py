@@ -1,5 +1,7 @@
 import pygame
 import os
+from helpers import *
+
 
 class Pixel:
     '''
@@ -109,19 +111,12 @@ class Tile_Editor:
         self.pixel_size = pix_size
 
         cwd = os.getcwd()
-        try:
-            self.brush_btn = pygame.image.load('{}\\images\\brush_btn.png'.format(cwd)).convert()
-            self.brush_btn_rect = pygame.Rect((0, 0), self.brush_btn.get_size())
-        except pygame.error:
-            print ("Unable to load brush btn image")
-            raise SystemExit(pygame.get_error())
 
-        try:
-            self.fill_btn = pygame.image.load('{}\\images\\fill_btn.png'.format(cwd)).convert()
-            self.fill_btn_rect = pygame.Rect((0, 0), self.brush_btn.get_size())
-        except pygame.error:
-            print ("Unable to load fill btn image") 
-            raise SystemExit(pygame.get_error())
+        self.brush_btn = load_file(get_dir_path("images", "brush_btn.png")).convert()
+        self.brush_btn_rect = pygame.Rect((0, 0), self.brush_btn.get_size())
+
+        self.fill_btn = load_file(get_dir_path("images", "fill_btn.png")).convert()
+        self.fill_btn_rect = pygame.Rect((0, 0), self.brush_btn.get_size())
 
         self.show_actual_size = True
         self.show_double_size = True
@@ -153,8 +148,8 @@ class Tile_Editor:
 
     def set_image(self,image):
         if image:
-            l = self.pixel_size # len(self.pixels)
-            print('set_image: image size = {} <> {}'.format(image.get_size(), l))
+            # l = self.pixel_size # len(self.pixels)
+            # print('set_image: image size = {} <> {}'.format(image.get_size(), l))
             w, h = image.get_size()
             self.img = image
             for x in range(w):
