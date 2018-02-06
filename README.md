@@ -12,7 +12,8 @@ q - quits
 o - prompts for image file to open (File must be in the images folder)
 shift-o - lists the contents of the images folder, with numbers, and prompts to select a file
 
-TODO:
+## TODO:
+! Save changes !
 - Add preview for animated sprites (functionality is in sprites.py)
 - Implement message box prompt
 - merge palette from image 
