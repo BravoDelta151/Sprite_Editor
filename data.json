@@ -1,0 +1,17 @@
+{
+	sprites: 
+	[
+		filename: 'CHAR10.BMP'
+		width: 109,
+		height: 54,
+		count: 6
+		frame_rate: 5,
+	],
+	[
+	
+	],
+	[
+	]
+
+	
+}
