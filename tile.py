@@ -88,15 +88,13 @@ class Pixel:
 
 class Tile_Editor:
 
-    def __init__(self, x, y, width, height, palette, image = None, show_grid = True):
-        self.x = x
-        self.y = y
-
-        self.width = width
-        self.height = height
-        self.rect = pygame.Rect(x, y, width, height)
-
+    def __init__(self, parent, x, y, width, height, palette, image = None, show_grid = True):
+        self.x, self.y = x, y        
+        self.width, self.height = width, height
+        self.parent = parent
         self.palette = palette
+
+        self.rect = pygame.Rect(x, y, width, height)
 
         self.image = image
         if not self.image:
@@ -122,6 +120,15 @@ class Tile_Editor:
         self.fill_btn = load_file(get_dir_path("images", "fill_btn.png")).convert()
         self.fill_btn_rect = pygame.Rect((sx, sy), self.brush_btn.get_size())
         sy += self.fill_btn.get_height() + 10
+
+        # Add Load and new buttons
+        self.load_btn = load_file(get_dir_path("images", "load_btn.png")).convert()
+        self.load_btn_rect = pygame.Rect((sx,sy), self.load_btn.get_size())
+        sy += self.load_btn.get_height() + 10
+
+        self.new_btn = load_file(get_dir_path("images", "new_btn.png")).convert()
+        self.new_btn_rect = pygame.Rect((sx,sy), self.new_btn.get_size())
+        sy += self.new_btn.get_height() + 10
 
         # Add save buttons
         self.save_btn = load_file(get_dir_path("images", "save_btn.png")).convert()
@@ -200,6 +207,14 @@ class Tile_Editor:
                 color = self.palette.get_color(button)
                 self.pixels[x][y].set(color)
         # TODO:
+        elif self.load_btn_rect.collidepoint(pos):
+            # print("Load btn clicked")
+            self.parent.load_prompt()
+
+        elif self.new_btn_rect.collidepoint(pos):
+            print("New Btn Clicked")
+            
+            
         elif self.brush_btn_rect.collidepoint(pos):
             print("brush btn clicked")
 
@@ -210,7 +225,9 @@ class Tile_Editor:
             print("save btn clicked")
 
         elif self.saveas_btn_rect.collidepoint(pos):
-            print("save as btn clicked")
+            # print("save as btn clicked")
+            self.parent.save_prompt()
+
 
     def draw(self, surface):
         '''
@@ -221,6 +238,8 @@ class Tile_Editor:
         pygame.draw.rect(surface, (100,100,100), (self.x - 1, self.y - 1, self.width + 1, self.height + 1), 4)
         surface.blit(self.image, (self.x, self.y))
 
+        surface.blit(self.load_btn, self.load_btn_rect.topleft)
+        surface.blit(self.new_btn, self.new_btn_rect.topleft)
         surface.blit(self.brush_btn, self.brush_btn_rect.topleft)
         surface.blit(self.fill_btn, self.fill_btn_rect.topleft)
         surface.blit(self.save_btn, self.save_btn_rect.topleft)

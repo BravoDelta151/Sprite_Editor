@@ -6,6 +6,7 @@ def get_dir_path(dirname = "", filename=None):
     cwd = os.getcwd()
     data_dir = os.path.join(cwd, 'data')
     image_dir = os.path.join(cwd, 'images')
+    bank_dir = os.path.join(cwd, "banks")
 
     if dirname and dirname.lower() == "data":
         if filename:
@@ -17,6 +18,11 @@ def get_dir_path(dirname = "", filename=None):
             return os.path.join(image_dir, filename)
         else:
             return image_dir
+    elif dirname and dirname.lower() == "banks":
+        if filename:
+            return os.path.join(bank_dir, filename)
+        else:
+            return bank_dir
     else:
         return cwd
 

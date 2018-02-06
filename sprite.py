@@ -85,15 +85,15 @@ class SpriteStripAnim(object):
         for i in range(len(self.cells)):
             self.cells[i] = pygame.transform.rotate(self.cells[i], angle)
 
-    def inc_frames(self):
-        self.set_frames(self.frames + 1)
+    def inc_frame_rate(self):
+        self.set_frame_rate(self.frames + 1)
 
-    def dec_frames(self):
-        self.set_frames(max(1, self.frames - 1))
+    def dec_frame_rate(self):
+        self.set_frame_rate(max(1, self.frames - 1))
 
-    def set_frames(self, frames):
+    def set_frame_rate(self, frame_rate):
         # print("Setting frames to {}".format(frames))
-        self.frames = frames
+        self.frames = frame_rate
         self.skip_frame = 0
         # self.i = 0
 
@@ -146,12 +146,6 @@ class Sprite:
 
         self.dir_x = 0
         self.dir_y = 0
-        
-        # try:
-        #     self.image = pygame.image.load(filename).convert()
-        # except pygame.error:
-        #     print ("Unable to load spritesheet image: {}".format(filename))    
-        #     raise SystemExit(pygame.get_error())
 
         self.strip = SpriteStripAnim(self.image, (0,0,width,height), count, colorkey = (255,0,255), loop = loop, frames = frame_rate )
     

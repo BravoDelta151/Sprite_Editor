@@ -14,18 +14,15 @@ class GUI:
     def __init__(self):
         pygame.init()
 
-        self.x = 10
-        self.y = 10
-
-        self.width = 1000
-        self.height = 700
+        self.x, self.y = 10, 10
+        self.width, self.height = 1000, 700
 
         self.FPS = 30
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont('arial', 16)      
         
         self.screen = pygame.display.set_mode((self.width, self.height))
-        pygame.display.set_caption("Sprite Viewer")
+        pygame.display.set_caption("Sprite Editor")
 
         background = pygame.Surface(self.screen.get_size())
         background = background.convert()
@@ -36,13 +33,12 @@ class GUI:
 
         self.screen.blit(background, (0, 0))
         self.sprites = []
-        
-        
+                
         self.palette = Palette.init_from_file(get_dir_path("data", "palette_nes_decimal.txt"))
         self.show_palette = True
 
         # set_cursor_from_image(self.cwd+'\\paintbrush_cursor_1.png', (4, 21))
-        self.tile_editor = Tile_Editor(10,10, 512, 512, self.palette)
+        self.tile_editor = Tile_Editor(self, 10,10, 512, 512, self.palette)
         self.strip_map = Strip_Map(self.width - 390 , 10,get_dir_path("images", "16x256.bmp"))
         
         self.running = True
@@ -79,47 +75,63 @@ class GUI:
 
         pygame.display.flip()
 
+    def _msg_box_prompt(self, label):
+        size = (250, 50)
+        posx = (self.width/2 - size[0]/2) - self.x
+        posy = self.y + 50 # (self.height/4 - size[1]/2) - self.y
+        prompt = Prompt(self.screen, (posx,posy), size, label)
+        prompt.text_boxes.append(Text_Box((posx+55, posy+20), (150, 16), 'Name', 'all'))
 
-    def load_file(self,shift_key = True):
+        return prompt.run(self.screen)
+
+    def save_prompt(self):
+        # size = (250, 50)
+        # screen_w, screen_h = pygame.display.get_surface().get_size()
+        # posx = (self.width/2 - size[0]/2) - self.x
+        # posy = (self.height/2 - size[1]/2) - self.y
+        # prompt = Prompt(self.screen, (posx,posy), size, 'Save Sprite As')
+        name = self._msg_box_prompt('Save Bank As')
+        
+        if name:
+            print(name)
+        #     if name.lower() == 'pymap':
+        #         self.post_status('SAVE FAILED: \'pyMap\' is a reserved map name')
+        #         return
+        #     if os.path.isdir(cwd+'\\Maps\\'+name):
+        #         self.post_status('SAVE FAILED: The name provided is already in use by another map')
+        #         surface.fill((0,0,0))
+        #         self.draw(surface)
+        #         pygame.display.flip()
+        #         self.save_as_prompt(surface)
+        #     else:
+        #         self.name = name
+        #         os.mkdir(cwd+'\\Maps\\'+name)
+        #         self.save()
+
+    def load_prompt(self,shift_key = True):
         '''
         TODO: Implement message box prompt
         '''
-        prompt = "Enter filename: "
-        file_list = None
-        file_name = "16x256.bmp" 
+        # file_list = get_file_list('images')
 
-        if shift_key:
-            file_list = get_file_list('images')
-            
-            if len(file_list) > 0:
-                prompt = "Select file number: "
-                for idx, f in enumerate(file_list):
-                    print('{} - {}'.format(idx, f))
-            
-        x = input(prompt)
-
-        # print('x: {}, nx: {}'.format(x, nx))
-        if x.isdigit and file_list:
-            nx = int(x)
-            if nx >= 0 and nx < len(file_list):
-                print("Selected: {}".format(file_list[nx]))
-                file_name = file_list[nx]
+        # size = (250, 50)
+        # screen_w, screen_h = pygame.display.get_surface().get_size()
+        # posx = (self.width/2 - size[0]/2) - self.x
+        # posy = (self.height/4 - size[1]/2) - self.y
+        # prompt = Prompt(self.screen, (posx,posy), size, 'Load Bank')
+        # prompt.text_boxes.append(Text_Box((posx+55, posy+20), (150, 16), 'Name', 'all'))
+        file_name = self._msg_box_prompt('Load Bank') #prompt.run(self.screen)
+        if file_name:
+            print(file_name)
+            full_filename = get_dir_path("bank", file_name)
+            check = os.path.isfile(full_filename)
+            if check:   
+                if self.strip_map:
+                    self.strip_map.load_strip(full_filename)
+                else:
+                    self.strip_map = Strip_Map(self.width - 390 , 10, full_filename)
             else:
-                print("Invalid selection")
-        else:
-            file_name = x
-
-        full_filename = get_dir_path("images", file_name)
-        check = os.path.isfile(full_filename)
-        if check:     
-            if self.strip_map:
-                self.strip_map.load_strip(full_filename)
-            else:
-                self.strip_map = Strip_Map(self.width - 390 , 10, full_filename)
-        else:
-            print("Invalid file name")
-
-
+                print("Invalid file name")
 
     def handle_keypress(self, evt):
 
@@ -131,10 +143,16 @@ class GUI:
         if pressed_keys[pygame.K_o]:
             # pressing 'o' prompts to enter filename
             # shift - o reads image directory and lists in terminal 
-            self.load_file(pressed_keys[K_LSHIFT])                  
+            self.load_prompt(pressed_keys[pygame.K_LSHIFT])                  
 
         if pressed_keys[pygame.K_p]:
             self.show_palette = not self.show_palette
+
+        if pressed_keys[pygame.K_s] and pressed_keys[pygame.K_LCTRL]:
+            self.save_prompt()
+
+        if pressed_keys[pygame.K_n] and pressed_keys[pygame.K_LCTRL]:
+            pass # TODO: New
 
 
     def handle_mousebutton(self, event):
@@ -149,7 +167,7 @@ class GUI:
                 frame = self.strip_map.handle_click(event.pos)
                 if frame:
                     self.tile_editor.set_image(frame)
-                
+
 
     def run(self):
         while self.running:
