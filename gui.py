@@ -108,9 +108,9 @@ class GUI:
                     print('{} - {}'.format(idx, f))
             
         x = input(prompt)
-                
+
         # print('x: {}, nx: {}'.format(x, nx))
-        if file_list:
+        if x.isdigit and file_list:
             nx = int(x)
             if nx >= 0 and nx < len(file_list):
                 print("Selected: {}".format(file_list[nx]))
@@ -120,7 +120,7 @@ class GUI:
         else:
             file_name = x
 
-        full_filename = '{}\\images\\{}'.format(self.cwd, filename)
+        full_filename = '{}\\images\\{}'.format(self.cwd, file_name)
         check = os.path.isfile(full_filename)
         if check:            
            self.strip_map = Strip_Map(self.width - 300 , 90, full_filename)
