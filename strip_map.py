@@ -15,8 +15,8 @@ class Strip_Map:
         #     print ("Unable to load spritesheet image: {}".format(filename))    
         #     raise SystemExit(pygame.get_error())
 
-    def _get_selected_frame(self):
-        return self.sprite_strip.get_frame(self.selected_cell)
+    def get_frame(self, index):
+        return self.sprite_strip.get_frame(index)
 
     def load_strip(self, filename):
 
@@ -52,7 +52,7 @@ class Strip_Map:
         self.selected_rect.y = self.y + self.selected_cell * 16
         self.selected_rect2x.y = self.y + self.selected_cell * 32
         
-        return self._get_selected_frame()
+        return self.get_frame(self.selected_cell)
 
     def draw(self, surface):
         surface.blit(self.image, (self.x, self.y))
