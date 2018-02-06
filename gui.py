@@ -80,18 +80,12 @@ class GUI:
         posx = (self.width/2 - size[0]/2) - self.x
         posy = self.y + 50 # (self.height/4 - size[1]/2) - self.y
         prompt = Prompt(self.screen, (posx,posy), size, label)
-        prompt.text_boxes.append(Text_Box((posx+55, posy+20), (150, 16), 'Name', 'all'))
+        prompt.text_boxes.append(Text_Box((posx+55, posy+20), (160, 18), 'Name', 'all'))
 
         return prompt.run(self.screen)
 
     def save_prompt(self):
-        # size = (250, 50)
-        # screen_w, screen_h = pygame.display.get_surface().get_size()
-        # posx = (self.width/2 - size[0]/2) - self.x
-        # posy = (self.height/2 - size[1]/2) - self.y
-        # prompt = Prompt(self.screen, (posx,posy), size, 'Save Sprite As')
-        name = self._msg_box_prompt('Save Bank As')
-        
+        name = self._msg_box_prompt('Save Bank As')        
         if name:
             print(name)
         #     if name.lower() == 'pymap':
@@ -113,21 +107,17 @@ class GUI:
         TODO: Implement message box prompt
         '''
         # file_list = get_file_list('images')
-
-        # size = (250, 50)
-        # screen_w, screen_h = pygame.display.get_surface().get_size()
-        # posx = (self.width/2 - size[0]/2) - self.x
-        # posy = (self.height/4 - size[1]/2) - self.y
-        # prompt = Prompt(self.screen, (posx,posy), size, 'Load Bank')
-        # prompt.text_boxes.append(Text_Box((posx+55, posy+20), (150, 16), 'Name', 'all'))
-        file_name = self._msg_box_prompt('Load Bank') #prompt.run(self.screen)
+        file_name = self._msg_box_prompt('Load Bank') 
         if file_name:
-            print(file_name)
-            full_filename = get_dir_path("bank", file_name)
+            # print(file_name)
+
+            full_filename = get_dir_path("banks", file_name + ".bmp")
+            # print(full_filename)
             check = os.path.isfile(full_filename)
             if check:   
                 if self.strip_map:
                     self.strip_map.load_strip(full_filename)
+                    self.tile_editor.set_image(self.strip_map.get_frame(0))
                 else:
                     self.strip_map = Strip_Map(self.width - 390 , 10, full_filename)
             else:

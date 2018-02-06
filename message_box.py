@@ -10,7 +10,7 @@ class Text_Box:
         self.type = input_type
         self.rect = pygame.Rect((position, size))
         self.text = ''
-        self.font = pygame.font.SysFont('times new roman', 12)
+        self.font = pygame.font.SysFont('times new roman', 14)
         self.active = False
 
 
@@ -81,13 +81,13 @@ class Prompt:
                     if event.key == pygame.K_BACKSPACE:
                         if self.active_box and self.active_box.text:
                             temp = ''
-                            for i in xrange(len(self.active_box.text)-1):
+                            for i in range(len(self.active_box.text)-1):
                                 temp += self.active_box.text[i]
                             self.active_box.text = temp
                         continue
                     if event.key == pygame.K_TAB:
                         ref = 0
-                        for i in xrange(len(self.text_boxes)):
+                        for i in range(len(self.text_boxes)):
                             if self.text_boxes[i] is self.active_box:
                                 ref = i
                         if ref+1 > len(self.text_boxes)-1:
