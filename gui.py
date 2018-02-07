@@ -15,7 +15,7 @@ class GUI:
         pygame.init()
 
         self.x, self.y = 10, 10
-        self.width, self.height = 1000, 700
+        self.width, self.height = 1000, 600
 
         self.FPS = 30
         self.clock = pygame.time.Clock()
@@ -41,6 +41,8 @@ class GUI:
         self.tile_editor = Tile_Editor(self, 10,10, 512, 512, self.palette)
         self.strip_map = Strip_Map(self.width - 390 , 10,get_dir_path("images", "16x256.bmp"))
         
+        self.anim_panel = Anim_Panel(self, self.width - 310, self.y + 100, 300, 330, size = 256 )
+
         self.running = True
 
     def handle_events(self):
@@ -56,8 +58,16 @@ class GUI:
                 self.handle_mousebutton(event)
             else:
                 pass
-            
+
+    def track_changes(self):
+        # TODO: for undo/redo operation.  
+        # Implement on tile_editor (sub pixels)
+        pass
+
     def update(self):
+        pass
+
+    def draw(self):
         for bg in self.background_layers:
             self.screen.blit(bg, (0,0))
 
@@ -72,6 +82,8 @@ class GUI:
 
         if self.strip_map:
             self.strip_map.draw(self.screen)
+        
+        self.anim_panel.draw(self.screen)
 
         pygame.display.flip()
 
@@ -154,15 +166,19 @@ class GUI:
         
         if self.strip_map:
             if self.strip_map.check_click(event.pos):
-                frame = self.strip_map.handle_click(event.pos)
-                if frame:
+                frame, changed = self.strip_map.handle_click(event.pos)
+                print (changed)
+                if changed and frame:
                     self.tile_editor.set_image(frame)
+                    
+        self.anim_panel.handle_click(event.pos, event.button)
 
 
     def run(self):
         while self.running:
             self.handle_events()
             self.update()
+            self.draw()
             self.clock.tick(self.FPS)
         
         pygame.quit()

@@ -1,7 +1,7 @@
 import pygame
 import os
 from helpers import *
-
+from buttons import *
 
 class Pixel:
     '''
@@ -25,7 +25,13 @@ class Pixel:
         if self.color:
             self.image.fill(self.color)            
         else:
-            self._draw_cross()
+            self._draw_transparent()
+
+        self._changed = False
+
+    @property
+    def changed(self):
+        return self._changed
             
     def get_color(self):
         '''
@@ -38,9 +44,15 @@ class Pixel:
         else:
             return (255,0,255, 255)
         
+    def _draw_transparent(self):
+        '''
+        TODO: Future, add other ways of indicating a transparent pixel...
+        '''
+        self._draw_cross()
+
     def _draw_cross(self):
         '''
-        Draw a black box with a cross inside to indicate a transparent pixel
+        Draw a dark box with a crosshair inside to indicate a transparent pixel
         '''
         light_grey = (150,150,150,255)
         dark_grey = (75,75,75, 255)
@@ -51,8 +63,6 @@ class Pixel:
 
         half = self.size // 2
         q = 4
-        # pygame.draw.line(self.image, (100,100,100), (self.x + q, self.y + half), (self.size - q, self.y + half), 1)
-        # pygame.draw.line(self.image, (100,100,100), (self.x + half, self.y + q), (self.x + half, self.size - q), 1)
         pygame.draw.line(self.image, light_grey, (q, half), (self.size - q, half), 1)
         pygame.draw.line(self.image, light_grey, (half, q), (half, self.size - q), 1)
         pygame.draw.rect(self.image, light_grey, (0,0,self.size, self.size), 1)
@@ -65,7 +75,7 @@ class Pixel:
         if not self.color or self.color != color:
             self.parent.dirty = True
             if not color or (self.colorkey and color == self.colorkey):
-                self._draw_cross()
+                self._draw_transparent()
                 self.color = None
             else:
                 self.image.fill(color)
@@ -109,35 +119,38 @@ class Tile_Editor:
         self.pixels = [[Pixel(self, x * pix_size ,y * pix_size ,pix_size) for y in range(pix_size)] for x in range(pix_size)]
         self.pixel_size = pix_size
 
+        # parent, pos = (0, 0), id = 'btn', key = "not-set", img = None
         # add brush button and fill button
         # TODO: Implement brush button and fill button
         sx = self.x + self.width + 10
         sy =self.y 
-        self.brush_btn = load_file(get_dir_path("images", "brush_btn.png")).convert()
-        self.brush_btn_rect = pygame.Rect((sx, sy), self.brush_btn.get_size())
 
-        sy += self.brush_btn.get_height() + 10
-        self.fill_btn = load_file(get_dir_path("images", "fill_btn.png")).convert()
-        self.fill_btn_rect = pygame.Rect((sx, sy), self.brush_btn.get_size())
-        sy += self.fill_btn.get_height() + 10
+        self.buttons = []
+        self.buttons.append(Button(self, (sx,sy), id = "brush", callback = self._handle_button,
+            img = load_file(get_dir_path("images", "brush_btn.png")).convert()))
+        sy += self.buttons[-1].get_height() + 10
+
+        self.buttons.append(Button(self, (sx,sy), id = "fill", callback = self._handle_button,
+            img = load_file(get_dir_path("images", "fill_btn.png")).convert()))
+        sy += self.buttons[-1].get_height() + 10
 
         # Add Load and new buttons
-        self.load_btn = load_file(get_dir_path("images", "load_btn.png")).convert()
-        self.load_btn_rect = pygame.Rect((sx,sy), self.load_btn.get_size())
-        sy += self.load_btn.get_height() + 10
+        self.buttons.append(Button(self, (sx,sy), id = "load", callback = self._handle_button,
+            img = load_file(get_dir_path("images", "load_btn.png")).convert()))
+        sy += self.buttons[-1].get_height() + 10
 
-        self.new_btn = load_file(get_dir_path("images", "new_btn.png")).convert()
-        self.new_btn_rect = pygame.Rect((sx,sy), self.new_btn.get_size())
-        sy += self.new_btn.get_height() + 10
+        self.buttons.append(Button(self, (sx,sy), id = "new", callback = self._handle_button,
+            img = load_file(get_dir_path("images", "new_btn.png")).convert()))
+        sy += self.buttons[-1].get_height() + 10
 
         # Add save buttons
-        self.save_btn = load_file(get_dir_path("images", "save_btn.png")).convert()
-        self.save_btn_rect = pygame.Rect((sx,sy), self.save_btn.get_size())
-        sy += self.save_btn.get_height() + 10
+        self.buttons.append(Button(self, (sx,sy), id = "save", callback = self._handle_button,
+            img = load_file(get_dir_path("images", "save_btn.png")).convert()))
+        sy += self.buttons[-1].get_height() + 10
 
-        self.saveas_btn = load_file(get_dir_path("images", "saveas_btn.png")).convert()
-        self.saveas_btn_rect = pygame.Rect((sx,sy), self.saveas_btn.get_size())
-        sy += self.saveas_btn.get_height() + 10
+        self.buttons.append(Button(self, (sx,sy), id = "saveas", callback = self._handle_button,
+            img = load_file(get_dir_path("images", "saveas_btn.png")).convert()))
+        sy += self.buttons[-1].get_height() + 10
 
         # Add grid and 2x grid backgrounds
         # TODO: Consider adding button to hide grid 
@@ -155,6 +168,9 @@ class Tile_Editor:
 
         # dirty flag to determine if img needs updated
         self.dirty = True
+
+        # changed flag to detect if any changes occurred
+        self.changed = False
 
     def _update(self):
         '''
@@ -181,17 +197,34 @@ class Tile_Editor:
         return -1, -1
 
     def set_image(self,image):
+        '''
+        sets pixels to image
+        '''
         if image:
-            # l = self.pixel_size # len(self.pixels)
-            # print('set_image: image size = {} <> {}'.format(image.get_size(), l))
             w, h = image.get_size()
-            # self.preview = image
             for x in range(w):
                 for y in range(h):
                     color = image.get_at((x,y))
-                    # print('{}, {} - {}'.format(x,y, color))
                     self.pixels[x][y].set(color)
             self.dirty = True
+
+    def _handle_button(self, id):
+        '''
+        callback handler for all buttons
+        '''
+        print("Tile _handle_button called - {}".format(id))
+        if id == "load":
+            self.parent.load_prompt()
+        elif id == "new":
+            pass
+        elif id == "save":
+            pass
+        elif id == "saveas":
+            self.parent.save_prompt()
+        elif id == "brush":
+            pass
+        elif id == "fill":
+            pass
 
     def handle_click(self, pos, button):
         '''
@@ -206,44 +239,23 @@ class Tile_Editor:
             if x >= 0 and y >= 0:
                 color = self.palette.get_color(button)
                 self.pixels[x][y].set(color)
-        # TODO:
-        elif self.load_btn_rect.collidepoint(pos):
-            # print("Load btn clicked")
-            self.parent.load_prompt()
-
-        elif self.new_btn_rect.collidepoint(pos):
-            print("New Btn Clicked")
-            
-            
-        elif self.brush_btn_rect.collidepoint(pos):
-            print("brush btn clicked")
-
-        elif self.fill_btn_rect.collidepoint(pos):
-            print("fill btn clicked")
-
-        elif self.save_btn_rect.collidepoint(pos):
-            print("save btn clicked")
-
-        elif self.saveas_btn_rect.collidepoint(pos):
-            # print("save as btn clicked")
-            self.parent.save_prompt()
-
+        else:
+            for b in self.buttons:
+                if b.check_mouse(pos):
+                    b.on_click()
+                    break
 
     def draw(self, surface):
         '''
         handles drawing the tile editor, previe boxes and fill/brush buttons
         '''
         self._update()
-        # image = self.pixel_array.make_surface()
+
         pygame.draw.rect(surface, (100,100,100), (self.x - 1, self.y - 1, self.width + 1, self.height + 1), 4)
         surface.blit(self.image, (self.x, self.y))
 
-        surface.blit(self.load_btn, self.load_btn_rect.topleft)
-        surface.blit(self.new_btn, self.new_btn_rect.topleft)
-        surface.blit(self.brush_btn, self.brush_btn_rect.topleft)
-        surface.blit(self.fill_btn, self.fill_btn_rect.topleft)
-        surface.blit(self.save_btn, self.save_btn_rect.topleft)
-        surface.blit(self.saveas_btn, self.saveas_btn_rect.topleft)
+        for b in self.buttons:
+            b.draw(surface)
         
         if self.show_actual_size:
             surface.blit(self.grid, self.grid_rect.topleft)
@@ -267,6 +279,7 @@ class Palette:
         
         self.palette = palette
 
+        # Default Pallette
         if not self.palette:
             print("Using Default Palette:")
             self.palette = [ (124,124,124), (0,0,252), (0,0,188), (68,40,188), (148,0,132), (168,0,32), (168,16,0), (136,20,0), 

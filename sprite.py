@@ -68,7 +68,19 @@ class SpriteStripAnim(object):
         self.loop = loop
         self.frames = frames
         self.skip_frame = frames
-    
+        self.start_frame = 0
+        self.end_frame = len(self.cells) - 1
+
+    def set_start_frame(self, index = 0):
+        self.start_frame = index
+
+    def set_end_frame(self, index = -1):
+        if index < 0:
+            self.end_frame = len(self.cells) - 1
+        else:
+            self.end_frame = index 
+
+
     def flip(self, xbool = False, ybool = False):
         for i in range(len(self.cells)):
             self.cells[i] = pygame.transform.flip(self.cells[i], xbool, ybool)
