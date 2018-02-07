@@ -41,7 +41,7 @@ class GUI:
         self.tile_editor = Tile_Editor(self, 10,10, 512, 512, self.palette)
         self.strip_map = Strip_Map(self.width - 390 , 10,get_dir_path("images", "16x256.bmp"))
         
-        self.anim_panel = Anim_Panel(self, self.width - 310, self.y + 100, 300, 330, size = 256 )
+        self.anim_panel = Anim_Panel(self, self.width - 310, self.y + 100, 300, 330, size = 128 )
 
         self.running = True
 
@@ -99,7 +99,14 @@ class GUI:
     def save_prompt(self):
         name = self._msg_box_prompt('Save Bank As')        
         if name:
-            print(name)
+            name_bmp = "{}.bmp".format(name)
+            file_list = get_file_list('banks')
+            if name in file_list:
+                print("SAVE: --- Invalid File Name")
+            else:
+                full_name = get_dir_path("banks", name_bmp)
+                pygame.image.save(self.strip_map.image, full_name)
+                print("Saved: {}".format(full_name))
         #     if name.lower() == 'pymap':
         #         self.post_status('SAVE FAILED: \'pyMap\' is a reserved map name')
         #         return
@@ -130,6 +137,7 @@ class GUI:
                 if self.strip_map:
                     self.strip_map.load_strip(full_filename)
                     self.tile_editor.set_image(self.strip_map.get_frame(0))
+                    self.anim_panel.reset()
                 else:
                     self.strip_map = Strip_Map(self.width - 390 , 10, full_filename)
             else:
@@ -167,9 +175,13 @@ class GUI:
         if self.strip_map:
             if self.strip_map.check_click(event.pos):
                 frame, changed = self.strip_map.handle_click(event.pos)
-                print (changed)
-                if changed and frame:
+                # print (changed)
+                if frame and event.button == 3:
+                    self.anim_panel.add_cell(frame)
+                elif changed and frame:
                     self.tile_editor.set_image(frame)
+                
+
                     
         self.anim_panel.handle_click(event.pos, event.button)
 

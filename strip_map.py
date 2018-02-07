@@ -33,6 +33,21 @@ class Strip_Map:
         else:
             return False
 
+    def update(self, image):
+        
+        if image.get_size() == self.selected_rect.size:
+            # print("Strip_Map: update: {}".format(image))
+            sy = self.selected_cell * 16
+            for x in range(image.get_width()):
+                for y in range(image.get_height()):
+                    color = image.get_at((x,y))
+                    self.image.set_at((x, sy + y), color)
+            self.image2x = pygame.transform.scale2x(self.image)
+            # self.image.blit(image, self.selected_rect.topleft)
+            self.sprite_strip.update_cell(image, self.selected_cell)
+        else:
+            print("Strip_Map: update - size mismatch {} != {} ".format(image.get_size(), self.selected_rect.size))
+
     def check_click(self, pos):
         return self.rect.collidepoint(pos) or self.rect2x.collidepoint(pos)
 
@@ -71,7 +86,7 @@ class Anim_Panel:
 
         # control buttons
         self.buttons = []
-        sx, sy = self.x + (self.width // 2 - 110), self.y + 10
+        sx, sy = self.x + (self.width // 2 - 125), self.y + 10
         # parent, pos = (0, 0), id = 'btn', img = None, callback = None):
         self.buttons.append(Button(self, (sx, sy), id = "pause", callback = self._handle_button,
             img = load_file(get_dir_path("images", "pause_btn.png")).convert()))
@@ -97,34 +112,70 @@ class Anim_Panel:
             img = load_file(get_dir_path("images", "fr28_btn.png")).convert()))
         sx += self.buttons[-1].get_width() + 10
 
-
+        self.buttons.append(Button(self, (sx, sy), id = "clear", callback = self._handle_button,
+            img = load_file(get_dir_path("images", "x_btn.png")).convert()))
+        sx += self.buttons[-1].get_width() + 10
+        
         # view port
         self.view_port = pygame.Surface((self.size, self.size))
+        self.view_port.fill((100,100,100))
+
         sx = self.x + (self.width // 2 - self.size // 2)
         sy = self.y + self.buttons[-1].get_height() + (self.height // 2 - self.size // 2)
-        
+        self.sprite = Sprite(None, sx, sy, 16,16, 0, frame_rate = 14)
         self.view_rect = pygame.Rect(sx, sy, self.size, self.size)
 
+        self._frame_number = -1
+        self.paused = True
         self.dirty = False
 
     def _handle_button(self, id):
-        print("Tile _handle_button called - {}".format(id))
         if id == "pause":
-            pass
+            self.paused = True
         elif id == "play":
-            pass
+            self.paused = self.sprite.strip.count <=  0
+            if not self.paused:
+                self.sprite.strip.iter()
+
         elif id == "dec":
-            pass
+            print("Anim_ _handle_button called - {}".format(id))
         elif id == "inc":
-            pass
+            print("Anim_ _handle_button called - {}".format(id))
         elif id == "fr14":
-            pass
+            print("Anim_ _handle_button called - {}".format(id))
         elif id == "fr28":
-            pass
+            print("Anim_ _handle_button called - {}".format(id))
+        elif id == "clear":
+            self.reset()
     
     def _update(self):
+        if self.sprite.strip.count > 0:            
+            if not self.paused:
+                image = self.sprite.strip.next()  
+                self._frame_number = self.sprite.strip.current_frame              
+            else:
+                image = self.sprite.strip.get_frame(-1)
+                self._frame_number = -1
+
+            if image:
+                pygame.transform.scale(image, self.view_rect.size, self.view_port)
+                self.view_port.set_colorkey((255,0,255))
+
         if self.dirty:
             pass
+
+    def reset(self):
+        self.paused = True
+        self.sprite.strip.delete_cell()
+        self.view_port.fill((100,100,100))
+        self._frame_number = -1
+
+    def add_cell(self, image):
+        '''
+        adds cell to the strip to animate
+        '''
+        
+        self.sprite.strip.add_cell(image)
 
     def handle_click(self, pos, btn):
         for b in self.buttons:
@@ -138,6 +189,11 @@ class Anim_Panel:
 
         for b in self.buttons:
             b.draw(surface)
-
+        
         surface.blit(self.view_port, self.view_rect.topleft)
+        if self._frame_number >= 0:
+            font = pygame.font.Font(None, 48)
+            text = font.render("{}".format(self._frame_number), 1, (255,0,0))
+            surface.blit(text, (self.view_rect.left - 20, self.view_rect.top))
+
         pygame.draw.rect(surface, (255,255,255), self.rect, 2)

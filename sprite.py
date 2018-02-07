@@ -62,8 +62,14 @@ class SpriteStripAnim(object):
         frames is the number of ticks to return the same image before
         the iterator advances to the next image.
         """
-        ss = spritesheet(image)
-        self.cells = ss.load_strip_vertical(rect, count, colorkey)
+        self.cell_rect = pygame.Rect(rect)
+        if image and count > 0:
+            ss = spritesheet(image)
+            self.cells = ss.load_strip_vertical(rect, count, colorkey)
+        else:
+            self.cells = []
+        
+
         self.current_frame = 0
         self.loop = loop
         self.frames = frames
@@ -71,14 +77,18 @@ class SpriteStripAnim(object):
         self.start_frame = 0
         self.end_frame = len(self.cells) - 1
 
+    @property
+    def count(self):
+        return len(self.cells)
+
     def set_start_frame(self, index = 0):
         self.start_frame = index
 
     def set_end_frame(self, index = -1):
         if index < 0:
-            self.end_frame = len(self.cells) - 1
-        else:
-            self.end_frame = index 
+            self.end_frame = self.count - 1
+        elif index < self.count:
+            self.end_frame = index
 
 
     def flip(self, xbool = False, ybool = False):
@@ -115,6 +125,9 @@ class SpriteStripAnim(object):
         return self
 
     def next(self):
+        if self.count <= 0:
+            return False
+
         if self.current_frame >= len(self.cells):
             if not self.loop:
                 raise StopIteration
@@ -134,11 +147,49 @@ class SpriteStripAnim(object):
         self.cells.extend(ss.cells)
         return self
 
+    def update_cell(self, image, index):
+        if index < -1 or index >= self.count:
+            print("SpriteStrip: Invalid Index: {}".format(index))
+        elif image.get_size() != self.cell_rect.size:
+            print("SpriteStrip: update_cell - size mismatch {} != {}".format(image.get_size(), self.cell_rect.size))
+        else:
+            # cells = []
+            # for i in range(self.count):
+            #     if i == index:
+            #         cells.append(image)
+            #     else:
+            #         cells.append(self.cells[i])
+            # self.cells.clear()
+            # self.cells = cells
+            for x in range(image.get_width()):
+                for y in range(image.get_height()):
+                    color = image.get_at((x,y))
+                    self.cells[index].set_at((x,y), color)
+            
+
+    def add_cell(self, image):
+        if image.get_size() == self.cell_rect.size:
+            self.cells.append(image)
+        else:
+            iw, ih = image.get_size()
+            print("Invalid image {}, {} != {}, {}".format(iw, ih, self.cell_rect.width, self.cell_rect.height) )
+
+    def delete_cell(self, index = -1):
+        '''
+        omitting index will clear entire list
+        '''
+        if index < 0:
+            self.cells.clear()
+        elif index < self.count:
+            del self.cells[index]
+        
+
     def get_frame(self, frame_index = 0):
         frame = None
-        if frame_index < 0 or frame_index >= len(self.cells):
+        if frame_index < -1 or frame_index >= len(self.cells):
             print('Invalid frame index [{}]'.format(frame_index))
         else:
+            # print ("getting frame {}".format(frame_index))
             frame = self.cells[frame_index]
         return frame
 
@@ -160,9 +211,7 @@ class Sprite:
         self.dir_y = 0
 
         self.strip = SpriteStripAnim(self.image, (0,0,width,height), count, colorkey = (255,0,255), loop = loop, frames = frame_rate )
-    
-    def get_frame_image(self, idx):
-        pass
+        self._animate = False
 
     def scale(self, scale):
         '''
@@ -189,11 +238,16 @@ class Sprite:
         self.x = x
         self.y = y
 
+    def animate(self, stop = False):
+        self._animate = not stop
+
     def draw(self, surface):
         '''
         Draw sprite on supplied surface
         '''
-        image = self.strip.next()
+        if self._animate:
+            image = self.strip.next()
+
         if image:
             surface.blit(image, (self.x, self.y)) #  (self.width // 2 - w // 2, self.height // 2 - h // 2))
 

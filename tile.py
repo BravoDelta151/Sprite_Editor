@@ -143,6 +143,10 @@ class Tile_Editor:
             img = load_file(get_dir_path("images", "new_btn.png")).convert()))
         sy += self.buttons[-1].get_height() + 10
 
+        self.buttons.append(Button(self, (sx,sy), id = "update", callback = self._handle_button,
+            img = load_file(get_dir_path("images", "update_btn.png")).convert()))
+        sy += self.buttons[-1].get_height() + 10
+
         # Add save buttons
         self.buttons.append(Button(self, (sx,sy), id = "save", callback = self._handle_button,
             img = load_file(get_dir_path("images", "save_btn.png")).convert()))
@@ -212,19 +216,24 @@ class Tile_Editor:
         '''
         callback handler for all buttons
         '''
-        print("Tile _handle_button called - {}".format(id))
+        
         if id == "load":
             self.parent.load_prompt()
         elif id == "new":
-            pass
+            print("Tile _handle_button called - {}".format(id))
+        elif id == "update":
+            # print("Tile _handle_button called - {}".format(id))
+            self.dirty = True
+            self._update()
+            self.parent.strip_map.update(self.preview)
         elif id == "save":
-            pass
+            print("Tile _handle_button called - {}".format(id))
         elif id == "saveas":
             self.parent.save_prompt()
         elif id == "brush":
-            pass
+            print("Tile _handle_button called - {}".format(id))
         elif id == "fill":
-            pass
+            print("Tile _handle_button called - {}".format(id))
 
     def handle_click(self, pos, button):
         '''
