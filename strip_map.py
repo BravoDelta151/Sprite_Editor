@@ -68,10 +68,10 @@ class Strip_Map:
 
     def draw(self, surface):
         surface.blit(self.image, (self.x, self.y))
-        pygame.draw.rect(surface, (255,255,0), self.selected_rect, 2)
+        pygame.draw.rect(surface, (255,255,0), self.selected_rect, 1)
 
         surface.blit(self.image2x, (self.x + self.rect.width + 20, self.y))
-        pygame.draw.rect(surface, (255,255,0), self.selected_rect2x, 4)
+        pygame.draw.rect(surface, (255,255,0), self.selected_rect2x, 2)
 
 class Anim_Panel:
     '''
