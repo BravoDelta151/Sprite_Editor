@@ -3,11 +3,9 @@ import pygame
 from pygame.locals import *
 from helpers import *
 from sprite import *
-from tile import *
+from tile_editor import *
 from strip_map import *
-from message_box import *
-
-
+from components import *
 
 class GUI:
 
@@ -22,11 +20,12 @@ class GUI:
         self.font = pygame.font.SysFont('arial', 16)      
         
         self.screen = pygame.display.set_mode((self.width, self.height))
-        pygame.display.set_caption("Sprite Editor")
+        
+        self._set_display_name("untitled")
 
         background = pygame.Surface(self.screen.get_size())
         background = background.convert()
-        background.fill((40, 190,120)) # 0, 15, 40))
+        background.fill((40, 190,120))
 
         self.background_layers = []
         self.background_layers.append(background)
@@ -37,7 +36,6 @@ class GUI:
         self.palette = Palette.init_from_file(get_dir_path("data", "palette_nes_decimal.txt"))
         self.show_palette = True
 
-        # set_cursor_from_image(self.cwd+'\\paintbrush_cursor_1.png', (4, 21))
         self.tile_editor = Tile_Editor(self, 10,10, 512, 512, self.palette)
         self.strip_map = Strip_Map(self.width - 390 , 10,get_dir_path("images", "16x256.bmp"))
         
@@ -45,7 +43,17 @@ class GUI:
 
         self.running = True
 
+    def _set_display_name(self, text):
+        if text == "16x256":
+            self._display_name = "untitled"
+        else:
+            self._display_name = text
+
+        pygame.display.set_caption("Sprite Editor  --  {}".format(self._display_name))
+
     def handle_events(self):
+        ''' Handles top level events and calls sub components 
+        '''    
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
@@ -70,6 +78,10 @@ class GUI:
         pass
 
     def draw(self):
+        ''' 
+        Top level function to draw all images
+            calls subcomponents draw functions
+        '''
         for bg in self.background_layers:
             self.screen.blit(bg, (0,0))
 
@@ -90,6 +102,9 @@ class GUI:
         pygame.display.flip()
 
     def _msg_box_prompt(self, label):
+        '''
+        Base message box call
+        '''
         size = (250, 50)
         posx = (self.width/2 - size[0]/2) - self.x
         posy = self.y + 50 # (self.height/4 - size[1]/2) - self.y
@@ -98,29 +113,41 @@ class GUI:
 
         return prompt.run(self.screen)
 
-    def save_prompt(self):
-        name = self._msg_box_prompt('Save Bank As')        
-        if name:
+    def _save_bank(self, file_name, overwrite = False):
+        '''
+        '''
+        restricted_list = ["", "untitled", "16x256"]
+
+        if file_name in restricted_list:
+            name = self.save_prompt()
+        else:
+            name = file_name
+
+        if name not in restricted_list:
             name_bmp = "{}.bmp".format(name)
             file_list = get_file_list('banks')
-            if name_bmp in file_list:
+            if name_bmp in file_list and overwrite == False:
+                # TODO: Prompt message box with error messsage
                 print("SAVE: --- Invalid File Name")
             else:
                 full_name = get_dir_path("banks", name_bmp)
                 pygame.image.save(self.strip_map.image, full_name)
                 print("Saved: {}".format(full_name))
 
-    def load_prompt(self,shift_key = True):
+    def save_prompt(self):
         '''
-        TODO: Implement message box prompt
+        Display message box to bank 
         '''
-        # file_list = get_file_list('images')
-        file_name = self._msg_box_prompt('Load Bank') 
-        if file_name:
-            # print(file_name)
+        file_name = self._msg_box_prompt('Save Bank As')
+        self._save_bank(file_name)
 
+    def _load_bank(self, file_name):
+        '''
+        Loads a bank.  Moved out of load_prompt to handle
+        New button which simply loads a blank strip
+        '''
+        if file_name:
             full_filename = get_dir_path("banks", file_name + ".bmp")
-            # print(full_filename)
             check = os.path.isfile(full_filename)
             if check:   
                 if self.strip_map:
@@ -129,8 +156,19 @@ class GUI:
                     self.anim_panel.reset()
                 else:
                     self.strip_map = Strip_Map(self.width - 390 , 10, full_filename)
+                self._set_display_name(file_name)
             else:
                 print("Invalid file name")
+
+
+    def load_prompt(self,shift_key = True):
+        '''
+        Display message box to load a bank
+        '''
+        # file_list = get_file_list('images')
+        file_name = self._msg_box_prompt('Load Bank') 
+        self._load_bank(file_name)        
+            
 
     def handle_keypress(self, evt):
 
@@ -177,13 +215,14 @@ class GUI:
                     self.anim_panel.add_cell(frame)
                 elif changed and frame:
                     self.tile_editor.set_image(frame)
-                
 
-                    
         self.anim_panel.handle_click(event.pos, event.button)
 
 
     def run(self):
+        '''
+        main loop 
+        '''
         while self.running:
             self.handle_events()
             self.update()

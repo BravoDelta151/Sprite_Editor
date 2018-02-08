@@ -1,3 +1,7 @@
+'''
+Contains general gui conponents
+
+'''
 import pygame
 from pygame.locals import *
 
@@ -240,6 +244,10 @@ class Button:
     def topleft(self):
         return (self.x, self.y)
     
+    @property
+    def left(self):
+        return self.x
+
     @property
     def rect(self):
         return self._rect
