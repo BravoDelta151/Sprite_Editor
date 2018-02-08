@@ -1,6 +1,7 @@
 import pygame
 from pygame.locals import *
 
+
 class List_Box:
     '''
     TODO:
@@ -136,3 +137,140 @@ class Prompt:
         surface.blit(self.font.render(self.name, True, (0,0,192)), (cx - int(w/2),self.rect.top))
         for box in self.text_boxes:
             box.draw(surface)
+
+class Check_Box:
+    
+    def __init__(self, x, y, id = "cb", label = "CheckBox", img = None, img_selected = None, callback = None):
+        self.x, self.y = x, y
+        self.id = id
+        self.image = img
+        self.image_selected = img_selected
+
+        if not self.image:
+            self.image = pygame.Surface((24,24))
+            self.image.fill((255, 255, 255))
+        
+        if not self.image_selected:
+            self.image_selected = pygame.Surface((24,24))
+            self.image_selected.fill((255,0,0))
+
+        self.set_label(label)
+        self.rect = pygame.Rect((self.x, self.y), self.image.get_size())
+        self._callback = callback
+        self._selected = False
+
+    @property
+    def checked(self):
+        return self._selected
+
+    def set_label(self, text):
+        font = pygame.font.Font(None, 16)
+        self.label = font.render(text, 1, (0,0,0))
+       
+
+    def set_callback(self, callback = None):
+        '''
+        omit parameter to set to None
+        '''
+        self._callback = callback
+
+    def get_size(self):
+        return (self.image.get_width(), self.image.get_height())
+
+    def get_width(self):
+        return self.image.get_width()
+
+    def get_height(self):
+        return self.image.get_height() + self.label.get_height()
+    
+    def check_mouse(self, pos):
+        return self.rect.collidepoint(pos)
+
+    def update(self):
+        pass
+
+    def on_click(self):
+        self._selected = not self._selected
+        if self._callback:
+            self._callback(self.id, self._selected)
+        else:
+            print ('clicked: [{}] - '.format(self.id))
+
+
+    def draw(self, surface):
+        if self._selected:
+            surface.blit(self.image_selected, (self.x, self.y))
+        else:
+            surface.blit(self.image, (self.x, self.y))
+        # w, h = self.label.get_size()
+
+        surface.blit(self.label, (self.x - 10, self.y + self.image.get_height() + 4))
+        pygame.draw.rect(surface, (255,255,255), self.rect, 2)
+
+
+
+
+
+class Button:
+    '''
+    Class to handle GUI type buttons.
+    '''
+
+    def __init__(self, parent, pos = (0, 0), id = 'btn', img = None, callback = None):
+        '''
+        id - (string) id of button, passed back to callback
+        img - (pygame.image) image for button, otherwise you just get a 60x25 dark grey rectangle
+        callback - function to call when button is clicked.  includes the id as parameter.
+        '''
+        self.parent = parent
+        self.x, self.y = pos
+
+        self.image = img
+        if not img:
+            self.image = pygame.Surface((60, 25))
+            self.image.fill((200, 200, 200))
+        
+        self._rect = pygame.Rect((self.x, self.y), self.image.get_size())
+        self.tip = 'Click me'
+        self.down_click = False
+        self.id = id
+        self._callback = callback
+
+    @property
+    def topleft(self):
+        return (self.x, self.y)
+    
+    @property
+    def rect(self):
+        return self._rect
+
+    def set_callback(self, callback = None):
+        '''
+        omit parameter to set to None
+        '''
+        self._callback = callback
+        
+    def get_size(self):
+        return (self.image.get_width(), self.image.get_height())
+
+    def get_width(self):
+        return self.image.get_width()
+
+    def get_height(self):
+        return self.image.get_height()
+    
+    def check_mouse(self, pos):
+        return self._rect.collidepoint(pos)
+
+    def update(self):
+        pass
+
+    def on_click(self):
+        if self._callback:
+            self._callback(self.id)
+        else:
+            print ('clicked: [{}] - '.format(self.id))
+
+
+    def draw(self, surface):
+        surface.blit(self.image, (self.x, self.y))

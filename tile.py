@@ -1,7 +1,7 @@
 import pygame
 import os
 from helpers import *
-from buttons import *
+from components import *
 
 class Pixel:
     '''
@@ -133,6 +133,7 @@ class Tile_Editor:
         self.buttons.append(Button(self, (sx,sy), id = "fill", callback = self._handle_button,
             img = load_file(get_dir_path("images", "fill_btn.png")).convert()))
         sy += self.buttons[-1].get_height() + 10
+        self._cursor_bottom = sy - 5
 
         # Add Load and new buttons
         self.buttons.append(Button(self, (sx,sy), id = "load", callback = self._handle_button,
@@ -147,6 +148,12 @@ class Tile_Editor:
             img = load_file(get_dir_path("images", "update_btn.png")).convert()))
         sy += self.buttons[-1].get_height() + 10
 
+        # self.auto_update_cb = Check_Box(sx +10, sy - 5, id="auto_update", label = "Auto Update", 
+        #     img = load_file(get_dir_path("images", "cb_open.png")),
+        #     img_selected = load_file(get_dir_path("images", "cb_selected.png")),
+        #     callback = self._handle_checkbox)
+        # sy += self.auto_update_cb.get_height() + 5
+        
         # Add save buttons
         self.buttons.append(Button(self, (sx,sy), id = "save", callback = self._handle_button,
             img = load_file(get_dir_path("images", "save_btn.png")).convert()))
@@ -166,15 +173,28 @@ class Tile_Editor:
         self.gridx2 = pygame.transform.scale2x(self.grid)
         self.gridx2_rect = pygame.Rect(sx, sy, sw, sh)
 
+        self._right = sx + self.buttons[-1].get_width()
+        
         # options to show/hide previews 
         self.show_actual_size = True
         self.show_double_size = True
 
+        self.auto_update = False
+        self._mode = 'brush'
+        self._cursor = pygame.cursors.broken_x
         # dirty flag to determine if img needs updated
         self.dirty = True
 
         # changed flag to detect if any changes occurred
         self.changed = False
+
+    @property
+    def cursor(self):
+        return self._cursor
+
+    @property
+    def right(self):
+        return self._right
 
     def _update(self):
         '''
@@ -204,6 +224,9 @@ class Tile_Editor:
         '''
         sets pixels to image
         '''
+        if self.auto_update:
+            self._handle_button("update")
+
         if image:
             w, h = image.get_size()
             for x in range(w):
@@ -211,6 +234,22 @@ class Tile_Editor:
                     color = image.get_at((x,y))
                     self.pixels[x][y].set(color)
             self.dirty = True
+
+    def _handle_checkbox(self, id, selected):
+        if id == "auto_update":
+            self.auto_update = selected
+
+    def _fill(self, pos, check, color, caller = None):
+        x, y = pos
+        neighbors = [(x, y - 1), (x - 1, y), (x, y + 1), (x+ 1, y)]
+        if x >= 0 and x < 16 and y >= 0 and y < 16:
+            self.pixels[x][y].set(color)
+            for n in neighbors:
+                if n != caller:
+                    nx, ny = n
+                    if self.pixels[nx][ny].get_color() == check:
+                        self._fill(n, check, color, pos)
+                            
 
     def _handle_button(self, id):
         '''
@@ -231,9 +270,15 @@ class Tile_Editor:
         elif id == "saveas":
             self.parent.save_prompt()
         elif id == "brush":
-            print("Tile _handle_button called - {}".format(id))
+            # print("Tile _handle_button called - {}".format(id))
+            self._mode = 'brush'
+            pygame.mouse.set_cursor(*pygame.cursors.broken_x)
+            self._cursor = pygame.cursors.broken_x
         elif id == "fill":
-            print("Tile _handle_button called - {}".format(id))
+            # print("Tile _handle_button called - {}".format(id))
+            self._mode = 'fill'
+            pygame.mouse.set_cursor(*pygame.cursors.diamond)
+            self._cursor = pygame.cursors.diamond
 
     def handle_click(self, pos, button):
         '''
@@ -247,11 +292,20 @@ class Tile_Editor:
             x, y = self._check_pixels_pos((px - self.x, py - self.y))
             if x >= 0 and y >= 0:
                 color = self.palette.get_color(button)
-                self.pixels[x][y].set(color)
+                if self._mode == 'fill':
+                    check = self.pixels[x][y].get_color()
+                    # print("Check = {} Color = {}".format(check, color))
+                    if check != color:
+                        self._fill((x, y), check, color)
+                else:
+                    self.pixels[x][y].set(color)
+                
+        # elif self.auto_update_cb.check_mouse(pos):
+        #     self.auto_update_cb.on_click()
         else:
             for b in self.buttons:
                 if b.check_mouse(pos):
-                    b.on_click()
+                    b.on_click()                    
                     break
 
     def draw(self, surface):
@@ -265,7 +319,13 @@ class Tile_Editor:
 
         for b in self.buttons:
             b.draw(surface)
+            if b.id == self._mode:
+                # draw rect
+                pygame.draw.rect(surface, (255,0,0), b.rect, 2)
+
         
+        # self.auto_update_cb.draw(surface)
+
         if self.show_actual_size:
             surface.blit(self.grid, self.grid_rect.topleft)
             surface.blit(self.preview, self.grid_rect.topleft)

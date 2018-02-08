@@ -54,6 +54,8 @@ class GUI:
                 # self.running = False
                 self.handle_keypress(event)
                 return
+            elif event.type == pygame.MOUSEMOTION:
+                self.handle_mousemove(event)
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 self.handle_mousebutton(event)
             else:
@@ -101,25 +103,12 @@ class GUI:
         if name:
             name_bmp = "{}.bmp".format(name)
             file_list = get_file_list('banks')
-            if name in file_list:
+            if name_bmp in file_list:
                 print("SAVE: --- Invalid File Name")
             else:
                 full_name = get_dir_path("banks", name_bmp)
                 pygame.image.save(self.strip_map.image, full_name)
                 print("Saved: {}".format(full_name))
-        #     if name.lower() == 'pymap':
-        #         self.post_status('SAVE FAILED: \'pyMap\' is a reserved map name')
-        #         return
-        #     if os.path.isdir(cwd+'\\Maps\\'+name):
-        #         self.post_status('SAVE FAILED: The name provided is already in use by another map')
-        #         surface.fill((0,0,0))
-        #         self.draw(surface)
-        #         pygame.display.flip()
-        #         self.save_as_prompt(surface)
-        #     else:
-        #         self.name = name
-        #         os.mkdir(cwd+'\\Maps\\'+name)
-        #         self.save()
 
     def load_prompt(self,shift_key = True):
         '''
@@ -164,6 +153,14 @@ class GUI:
         if pressed_keys[pygame.K_n] and pressed_keys[pygame.K_LCTRL]:
             pass # TODO: New
 
+    def handle_mousemove(self, event):
+        x, y = event.pos
+        # print("{} <> {}".format(self.tile_editor.right, x))
+        if self.tile_editor.right > x:
+            # print("{} > {}".format(self.tile_editor.right, x))
+            pygame.mouse.set_cursor(*(self.tile_editor.cursor))
+        else:
+            pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
     def handle_mousebutton(self, event):
         # print(event)

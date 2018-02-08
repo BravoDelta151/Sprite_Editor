@@ -1,7 +1,7 @@
 import pygame
 from sprite import *
 from helpers import *
-from buttons import *
+from components import *
 
 class Strip_Map:
 
@@ -173,8 +173,7 @@ class Anim_Panel:
     def add_cell(self, image):
         '''
         adds cell to the strip to animate
-        '''
-        
+        '''        
         self.sprite.strip.add_cell(image)
 
     def handle_click(self, pos, btn):
