@@ -4,10 +4,7 @@ To run (requires python 3)
 >python main.py
 
 
-
-Short-cuts implemented
-p - toggles palette on/off
-q - quits
+See help.jpg for instructions...
 
 All buttons work!
 Brush or Fill: fill one pixel at a time with brush or fill a range
