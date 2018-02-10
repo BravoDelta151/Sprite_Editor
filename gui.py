@@ -16,6 +16,8 @@ class GUI:
         self.width, self.height = 1000, 600
 
         self.FPS = 30
+        self._default_cursor = pygame.cursors.arrow
+
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont('arial', 16)      
         
@@ -101,14 +103,17 @@ class GUI:
 
         pygame.display.flip()
 
-    def _msg_box_prompt(self, label):
+    def _msg_box_prompt(self, label, info = None):
         '''
         Base message box call
         '''
-        size = (250, 50)
+        h = 50
+        if info:
+            h = 75
+        size = (250, h)
         posx = (self.width/2 - size[0]/2) - self.x
         posy = self.y + 50 # (self.height/4 - size[1]/2) - self.y
-        prompt = Prompt(self.screen, (posx,posy), size, label)
+        prompt = Prompt(self.screen, (posx,posy), size, label, info)
         prompt.text_boxes.append(Text_Box((posx+55, posy+20), (160, 18), 'Name', 'all'))
 
         return prompt.run(self.screen)
@@ -123,7 +128,7 @@ class GUI:
         else:
             name = file_name
 
-        if name not in restricted_list:
+        if name and name not in restricted_list:
             name_bmp = "{}.bmp".format(name)
             file_list = get_file_list('banks')
             if name_bmp in file_list and overwrite == False:
@@ -134,11 +139,16 @@ class GUI:
                 pygame.image.save(self.strip_map.image, full_name)
                 print("Saved: {}".format(full_name))
 
+    def _copy_frame(self):
+        # 
+        pass
+
+
     def save_prompt(self):
         '''
         Display message box to bank 
         '''
-        file_name = self._msg_box_prompt('Save Bank As')
+        file_name = self._msg_box_prompt('Save Bank As', '(do not include extension)')
         self._save_bank(file_name)
 
     def _load_bank(self, file_name):
@@ -166,7 +176,7 @@ class GUI:
         Display message box to load a bank
         '''
         # file_list = get_file_list('images')
-        file_name = self._msg_box_prompt('Load Bank') 
+        file_name = self._msg_box_prompt('Load Bank', '(do not include extension)') 
         self._load_bank(file_name)        
             
 
@@ -192,13 +202,10 @@ class GUI:
             pass # TODO: New
 
     def handle_mousemove(self, event):
-        x, y = event.pos
-        # print("{} <> {}".format(self.tile_editor.right, x))
-        if self.tile_editor.right > x:
-            # print("{} > {}".format(self.tile_editor.right, x))
+        if self.tile_editor.check_mouseover(event.pos):
             pygame.mouse.set_cursor(*(self.tile_editor.cursor))
         else:
-            pygame.mouse.set_cursor(*pygame.cursors.arrow)
+            pygame.mouse.set_cursor(*(self._default_cursor)) # pygame.cursors.arrow)
 
     def handle_mousebutton(self, event):
         # print(event)

@@ -259,6 +259,9 @@ class Tile_Editor:
         self.preview = pygame.Surface((16,16)).convert()
         self.preview.set_colorkey((255,0,255), pygame.RLEACCEL)
 
+        self._copy_paste = pygame.Surface((16,16)).convert()
+        self._copy_paste.set_colorkey((255,0,255,255), pygame.RLEACCEL)
+
         pix_size = width // 16
         # x, y, size
         self.pixels = [[Pixel(self, x * pix_size ,y * pix_size ,pix_size) for y in range(pix_size)] for x in range(pix_size)]
@@ -271,6 +274,7 @@ class Tile_Editor:
         sx = self.x + self.width + 10
         sy =self.y 
         
+
         self.buttons.append(Button(self, (sx,sy), id = "brush", callback = self._handle_button,
             img = load_file(get_dir_path("images", "brush_btn.png")).convert()))
         sy += self.buttons[-1].get_height() + 10
@@ -280,6 +284,7 @@ class Tile_Editor:
         sy += self.buttons[-1].get_height() + 10
         self._cursor_bottom = sy - 5
 
+        sy += 10
         # Add Load and new buttons
         self.buttons.append(Button(self, (sx,sy), id = "load", callback = self._handle_button,
             img = load_file(get_dir_path("images", "load_btn.png")).convert()))
@@ -317,6 +322,16 @@ class Tile_Editor:
         sy += sh + 10
         self.gridx2 = pygame.transform.scale2x(self.grid)
         self.gridx2_rect = pygame.Rect(sx, sy, sw, sh)
+
+        sy += (sh * 2) + 10
+        self.copy_btn = Button(self, (sx,sy), id = "copy", callback = self._handle_button,
+            img = load_file(get_dir_path("images", "copy_btn.png")).convert())      
+        self.paste_btn = Button(self, (sx,sy), id = "paste", callback = self._handle_button,
+            img = load_file(get_dir_path("images", "paste_btn.png")).convert())
+        self.paste_btn.set_enabled(False)
+
+        self.buttons.append(self.copy_btn)
+        self.buttons.append(self.paste_btn)
 
         self._right = sx + self.buttons[-1].get_width()
         
@@ -380,8 +395,9 @@ class Tile_Editor:
             pass
         # if self.auto_update:
         #     self._handle_button("update")
-
+        
         if image:
+            image.lock() 
             w, h = image.get_size()
             for x in range(w):
                 for y in range(h):
@@ -389,6 +405,8 @@ class Tile_Editor:
                     self.pixels[x][y].set(color)
             self.dirty = True
             self.changed = False
+        
+            image.unlock()
 
     def _handle_checkbox(self, id, selected):
         if id == "auto_update":
@@ -433,6 +451,31 @@ class Tile_Editor:
             self._mode = 'fill'
             pygame.mouse.set_cursor(*pygame.cursors.diamond)
             self._cursor = pygame.cursors.diamond
+        elif id == "copy" or id == "paste":
+            self._handle_copy_paste(id)
+
+    def _handle_copy_paste(self, id):
+        if id == "copy":
+            self._copy_paste.lock()
+            self.preview.lock()
+
+        for x in range(16):
+            for y in range(16):
+                if id == "copy":
+                    color = self.preview.get_at((x,y))
+                    self._copy_paste.set_at((x,y), color)  
+                else:
+                    self.set_image(self._copy_paste)      
+                    self._handle_button("update")
+        
+        if id == "copy":
+            self._copy_paste.unlock()
+            self.preview.unlock()
+
+        # swap buttons
+        for b in self.buttons:
+            if b.id == "copy" or b.id == "paste":
+                b.set_enabled(id != b.id)      
 
     def handle_click(self, pos, button):
         '''
@@ -461,6 +504,20 @@ class Tile_Editor:
                 if b.check_mouse(pos):
                     b.on_click()                    
                     break
+
+    def _check_button_mouseover(self, button_ids, mouse_pos):
+        for b in self.buttons:
+            if b.id in button_ids and b.check_mouse(mouse_pos):
+                return True
+        
+        return False
+
+    def check_mouseover(self, mouse_pos):
+        if self.rect.collidepoint(mouse_pos):
+            return True
+        else:
+            return self._check_button_mouseover(('fill', 'brush'), mouse_pos) # or self._check_button_mouseover('brush', mouse_pos))
+
 
     def draw(self, surface):
         '''

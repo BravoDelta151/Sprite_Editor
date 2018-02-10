@@ -4,6 +4,7 @@ Contains general gui conponents
 '''
 import pygame
 from pygame.locals import *
+from helpers import *
 
 
 class List_Box:
@@ -15,42 +16,73 @@ class List_Box:
 
 class Text_Box:
 
-    def __init__(self, position = (0,0), size = (1,1), lable = 'New', input_type = 'all'):
+    def __init__(self, position = (0,0), size = (1,1), label = 'New', input_type = 'all'):
         self.position = position
-        self.lable = lable
+        self.label = label
         self.type = input_type
         self.rect = pygame.Rect((position, size))
         self.text = ''
         self.font = pygame.font.SysFont('times new roman', 14)
         self.active = False
+        self.blink_tick = pygame.time.get_ticks() + 1000
+        self._cursor = True
 
+    def _blink(self):
+        ticks = pygame.time.get_ticks() 
+        if self.blink_tick < ticks:
+            self.blink_tick = ticks + 750
+            self._cursor = not self._cursor
+        return self._cursor
 
     def draw(self, surface):
         color = (96,96,96)
         if self.active:
             color = (255,255,255)
         pygame.draw.rect(surface, color, self.rect, 0)
-        w,h = self.font.size(self.lable)
+
+        
+        if self._blink():
+            text = '{}_'.format(self.text)
+        else:
+            text = self.text
+
+        w,h = self.font.size(self.label)
         x_offset = self.rect.left - (w+5)
-        surface.blit(self.font.render(self.lable, True, (0,0,0)), (x_offset, self.rect.top))
-        if self.text:
-            surface.blit(self.font.render(self.text, True, (0,0,0)), self.rect.topleft)
+        surface.blit(self.font.render(self.label, True, (0,0,0)), (x_offset, self.rect.top))
+        if text:
+            surface.blit(self.font.render(text, True, (0,0,0)), self.rect.topleft)
 
 
 
 class Prompt:
 
-    def __init__(self, surface, position, size, prompt_name = 'New Prompt', image = None):
+    def __init__(self, surface, position, size, prompt_name = 'New Prompt', info = None, image = None):
         self.x, self.y = position
         self.name = prompt_name
         self.image = image
         self.rect = pygame.Rect((position, size))
         self.font = pygame.font.SysFont('times new roman', 16)
         self.text_boxes = []
+        self.info = info
         self.valid_list = 'abcdefghijklmnopqrstuvwxyz0123456789-_'
         self.active_box = None
         self.running = True
         self.Shift_Down = False
+
+        bw, bh = size
+        self.ok_btn = Button(self, (self.x + bw - 70, self.y + bh - 30), id = "ok", callback = self._handle_button,
+            img = load_file(get_dir_path("images", "ok_btn.png")).convert())
+        self.x_btn = Button(self, (self.x + bw - 35, self.y + bh - 30), id = "cancel", callback =self._handle_button,
+            img = load_file(get_dir_path("images", "x_btn.png")).convert())
+        
+    def _handle_button(self, id):
+        # print("Button handler: {}".format(id))
+        if id == "cancel":
+            for box in self.text_boxes:
+                box.text = None
+
+        self.running = id not in ("ok", "cancel")
+    
 
     def run(self, surface):
         ret_vals = []
@@ -73,12 +105,19 @@ class Prompt:
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
-                for box in self.text_boxes:
-                    if box.rect.collidepoint(pos):
-                        if self.active_box:
-                            self.active_box.active = False
-                        box.active = True
-                        self.active_box = box
+                if self.ok_btn.check_mouse(pos):
+                    # print("Ok btn clicked")
+                    self.ok_btn.on_click()
+                elif self.x_btn.check_mouse(pos):
+                    # print("cancel btn clicked")
+                    self.x_btn.on_click()
+                else:
+                    for box in self.text_boxes:
+                        if box.rect.collidepoint(pos):
+                            if self.active_box:
+                                self.active_box.active = False
+                            box.active = True
+                            self.active_box = box
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
                     self.Shift_Down = False
@@ -141,6 +180,14 @@ class Prompt:
         surface.blit(self.font.render(self.name, True, (0,0,192)), (cx - int(w/2),self.rect.top))
         for box in self.text_boxes:
             box.draw(surface)
+        if self.info:
+            iw, ih = self.font.size(self.info)
+            surface.blit(self.font.render(self.info, True, (0,0,192)), (self.x + 10, self.rect.bottom - ih - 10))
+        if self.ok_btn:
+            self.ok_btn.draw(surface)
+        if self.x_btn:
+            self.x_btn.draw(surface)
+
 
 class Check_Box:
     
@@ -213,8 +260,69 @@ class Check_Box:
 
 
 
+class Button_Group:
 
+    def __init__(self, parent, x, y, layout = 'row', padding = (0,0), label = None): # , layout = 'flow'):
+        '''
+        Layout:  row or col
+        padding: (horizontal, vertical)
+        '''
+        self.parent= parent
+        self.x, self.y = x, y
 
+        self.layout = layout
+        self.label = label
+
+        self.pad_h, self.pad_v = padding
+        self.rect = pygame.Rect(self.x, self.y, self.pad_h, self.pad_v)
+        self._next_loc = (self.x + self.pad_h, self.y + self.pad_v)
+
+        self.buttons = []
+
+    def add_button(self, button):
+        nx, ny = self._next_loc
+        button.rect.x, button.rect.y = nx, ny
+
+        # calculate how the group rect size changed and set location for next button
+        if self.layout == 'row':
+            if len(self.buttons) == 0:
+                self.rect.width = max(self.rect.width, button.width + (self.pad_h * 2))
+            else:
+                self.rect.width += button.width + self.pad_h
+            
+            self.rect.height = max(self.rect.height, button.height + (self.pad_v * 2))
+            self._next_loc = (nx + button.width + self.pad_h, ny)
+
+        else: # col
+            if len(self.buttons) == 0:
+                self.rect.height = max(self.rect.height, button.height + (self.pad_v * 2))
+            else:
+                self.rect.height += button.height + self.pad_v
+            
+            self.rect.width = max(self.rect.width, button.width + (self.pad_h * 2))
+            self._next_loc = (nx, ny + button.height + self.pad_v)
+
+        # add button to list
+        self.buttons.append(button)
+
+    def draw(self, surface):
+        '''
+        Draw group, handles calling buttons draw function
+        '''
+        # only draw if there are buttons
+        if len(self.buttons) > 0:
+            # draw buttons
+            for b in self.buttons:
+                b.draw(surface)
+
+            # draw rect
+            pygame.draw.rect(surface, (0,0,0), self.rect, 1)
+
+            # draw text
+            if self.label:
+                surface.blit(get_text_rendered(' {} '.format(self.label)), (self.x + self.pad_h, self.y))
+
+        
 class Button:
     '''
     Class to handle GUI type buttons.
@@ -228,17 +336,30 @@ class Button:
         '''
         self.parent = parent
         self.x, self.y = pos
-
+        self.id = id
+        
         self.image = img
-        if not img:
-            self.image = pygame.Surface((60, 25))
-            self.image.fill((200, 200, 200))
+        if not self.image:
+            self._make_image()
+            # self.image = pygame.Surface((60, 25))
+            # self.image.fill((200, 200, 200))
         
         self._rect = pygame.Rect((self.x, self.y), self.image.get_size())
         self.tip = 'Click me'
         self.down_click = False
-        self.id = id
+
+        self._enabled = True
         self._callback = callback
+
+    def _make_image(self):
+        # font = pygame.font.SysFont("arial", 16)
+        # w, h = font.size(self.id)
+        # self.image = pygame.Surface((max(25, w + 4), max(25, h + 4)))
+        # self.image.fill((200,200,200))
+        # self.image.blit(font.render(self.id, True, (0,0,190)), (4,4))
+        # w, h = self.image.get_size()
+        # pygame.draw.rect(self.image, (0,0,0), (0,0,w,h), 1)
+        pass
 
     @property
     def topleft(self):
@@ -252,6 +373,29 @@ class Button:
     def rect(self):
         return self._rect
 
+    @property
+    def width(self):
+        return self.image.get_width()
+
+    @property
+    def height(self):
+        return self.image.get_height()
+
+    @property
+    def size(self):
+        return (self.width, self.height)
+
+    def set_enabled(self, enabled = True):
+        print('{} - enabled: {}'.format(self.id, enabled))
+        self._enabled = enabled
+
+    # TODO: Remove get_size, get_width and get_height
+    def get_width(self):
+        return self.image.get_width()
+
+    def get_height(self):
+        return self.image.get_height()
+    
     def set_callback(self, callback = None):
         '''
         omit parameter to set to None
@@ -261,24 +405,66 @@ class Button:
     def get_size(self):
         return (self.image.get_width(), self.image.get_height())
 
-    def get_width(self):
-        return self.image.get_width()
-
-    def get_height(self):
-        return self.image.get_height()
-    
     def check_mouse(self, pos):
-        return self._rect.collidepoint(pos)
+        if self._enabled:
+            return self._rect.collidepoint(pos)
+        else:
+            return False
 
     def update(self):
         pass
 
     def on_click(self):
-        if self._callback:
-            self._callback(self.id)
-        else:
-            print ('clicked: [{}] - '.format(self.id))
+        if self._enabled:
+            if self._callback:
+                self._callback(self.id)
+            else:
+                print ('clicked: [{}] - '.format(self.id))
 
 
     def draw(self, surface):
-        surface.blit(self.image, (self.x, self.y))
+        if self._enabled:
+            surface.blit(self.image, (self.x, self.y))
+
+
+# class Layout:
+#     '''
+#     Default -> this is also Flow_Layout - puts components in a single row
+#     '''
+#     def __init__(self, align = 'left', padding = (0,0)):
+#         '''
+#         align can be left, right, center
+#         padding is (horizontal, vertical)
+#         '''
+#         self.align = align
+#         self.padding = padding
+
+#         self.controls = []
+
+#     def _get_next_postion(self):
+#         pass
+
+#     def add_control(self, control):
+
+#         self.controls.append(control)
+
+
+
+# class Box_Layout(Layout):
+#     ''' 
+#     Like (Flow_)Layout, but puts components in a single column
+#     '''
+#     pass
+
+# class Card_Layout(Layout):
+#     '''
+#     Create a 'tabbed' style layout, basically multiple layouts unioned
+#     '''
+#     pass
+
+# class Grid_Layout(Layout):
+#     '''
+#     Creates a Grid style layout
+#     '''
+#     pass
+
