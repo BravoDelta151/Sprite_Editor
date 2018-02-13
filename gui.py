@@ -32,7 +32,7 @@ class GUI:
         self.background_layers = []
         self.background_layers.append(background)
 
-        self.screen.blit(background, (0, 0))
+        # self.screen.blit(background, (0, 0))
         self.sprites = []
                 
         self.palette = Palette.init_from_file(get_dir_path("data", "palette_nes_decimal.txt"))
