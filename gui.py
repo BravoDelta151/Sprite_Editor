@@ -53,6 +53,7 @@ class GUI:
 
         pygame.display.set_caption("Sprite Editor  --  {}".format(self._display_name))
 
+
     def handle_events(self):
         ''' Handles top level events and calls sub components 
         '''    
@@ -103,6 +104,7 @@ class GUI:
 
         pygame.display.flip()
 
+
     def _msg_box_prompt(self, label, info = None):
         '''
         Base message box call
@@ -117,6 +119,7 @@ class GUI:
         prompt.text_boxes.append(Text_Box((posx+55, posy+20), (160, 18), 'Name', 'all'))
 
         return prompt.run(self.screen)
+
 
     def _save_bank(self, file_name, overwrite = False):
         '''
@@ -139,9 +142,10 @@ class GUI:
                 pygame.image.save(self.strip_map.image, full_name)
                 print("Saved: {}".format(full_name))
 
-    def _copy_frame(self):
-        # 
-        pass
+
+    # def _copy_frame(self):
+    #     # 
+    #     pass
 
 
     def save_prompt(self):
@@ -150,6 +154,7 @@ class GUI:
         '''
         file_name = self._msg_box_prompt('Save Bank As', '(do not include extension)')
         self._save_bank(file_name)
+
 
     def _load_bank(self, file_name):
         '''

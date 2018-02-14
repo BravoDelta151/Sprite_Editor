@@ -64,16 +64,16 @@ class Prompt:
         self.font = pygame.font.SysFont('times new roman', 16)
         self.text_boxes = []
         self.info = info
-        self.valid_list = 'abcdefghijklmnopqrstuvwxyz0123456789-_'
+        self.valid_list = 'abcdefghijklmnopqrstuvwxyz0123456789-_.'
         self.active_box = None
         self.running = True
         self.Shift_Down = False
 
         bw, bh = size
         self.ok_btn = Button(self, (self.x + bw - 70, self.y + bh - 30), id = "ok", callback = self._handle_button,
-            img = load_file(get_dir_path("images", "ok_btn.png")).convert())
+            img = load_image(get_dir_path("images", "ok_btn.png")).convert())
         self.x_btn = Button(self, (self.x + bw - 35, self.y + bh - 30), id = "cancel", callback =self._handle_button,
-            img = load_file(get_dir_path("images", "x_btn.png")).convert())
+            img = load_image(get_dir_path("images", "x_btn.png")).convert())
         
     def _handle_button(self, id):
         # print("Button handler: {}".format(id))
@@ -105,10 +105,10 @@ class Prompt:
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
-                if self.ok_btn.check_mouse(pos):
+                if self.ok_btn.check_mousepos(pos):
                     # print("Ok btn clicked")
                     self.ok_btn.on_click()
-                elif self.x_btn.check_mouse(pos):
+                elif self.x_btn.check_mousepos(pos):
                     # print("cancel btn clicked")
                     self.x_btn.on_click()
                 else:
@@ -279,9 +279,9 @@ class Button_Group:
 
         self.buttons = []
 
-    def add_button(self, button):
+    def add_button(self, id = "btn", img = None, callback = None):
         nx, ny = self._next_loc
-        button.rect.x, button.rect.y = nx, ny
+        button = Button(self, (nx, ny), id, img, callback)
 
         # calculate how the group rect size changed and set location for next button
         if self.layout == 'row':
@@ -304,6 +304,19 @@ class Button_Group:
 
         # add button to list
         self.buttons.append(button)
+
+
+    def check_mousepos(self, pos):
+        return self.rect.collidepoint(pos)
+
+    def on_click(self, pos, btn):
+        for b in self.buttons:
+            if b.check_mousepos(pos):
+                b.on_click()
+                return True
+        
+        return False
+
 
     def draw(self, surface):
         '''
@@ -386,7 +399,7 @@ class Button:
         return (self.width, self.height)
 
     def set_enabled(self, enabled = True):
-        print('{} - enabled: {}'.format(self.id, enabled))
+        # print('{} - enabled: {}'.format(self.id, enabled))
         self._enabled = enabled
 
     # TODO: Remove get_size, get_width and get_height
@@ -405,7 +418,7 @@ class Button:
     def get_size(self):
         return (self.image.get_width(), self.image.get_height())
 
-    def check_mouse(self, pos):
+    def check_mousepos(self, pos):
         if self._enabled:
             return self._rect.collidepoint(pos)
         else:
@@ -420,6 +433,7 @@ class Button:
                 self._callback(self.id)
             else:
                 print ('clicked: [{}] - '.format(self.id))
+    
 
 
     def draw(self, surface):

@@ -60,11 +60,12 @@ class Palette:
         for line in lines:
             values = line.split(',')
             if len(values) != 3:
-                print ('{} -- {}'.format(line, values))
+                # print ('{} -- {}'.format(line, values))
                 data.append((255,255,255))
             else:
                 data.append((int(values[0]), int(values[1]), int(values[2])))
         return cls(data)
+
 
     def handle_click(self, pos, button):
         '''
@@ -78,6 +79,7 @@ class Palette:
                     self.right_color.fill(b['surf'].get_at((8,8)))
                 return True
         return False
+
 
     def get_color(self, button):
         '''
@@ -127,6 +129,8 @@ class Palette:
                 sx += 16
                 count += 1
 
+
+
 class Pixel:
     '''
     This class handles a single pixel in the bitmap and shows it as a block in the
@@ -159,10 +163,12 @@ class Pixel:
 
         self._changed = False
 
+
     @property
     def changed(self):
         return self._changed or self.color != self.orig_color
-            
+
+
     def get_color(self):
         '''
         Gets current color of pixel block
@@ -173,12 +179,14 @@ class Pixel:
             return self.colorkey
         else:
             return (255,0,255, 255)
-        
+
+
     def _draw_transparent(self):
         '''
         TODO: add other ways of indicating a transparent pixel...
         '''
         self._draw_cross()
+
 
     def _draw_cross(self):
         '''
@@ -197,6 +205,7 @@ class Pixel:
         pygame.draw.line(self.image, light_grey, (half, q), (half, self.size - q), 1)
         pygame.draw.rect(self.image, light_grey, (0,0,self.size, self.size), 1)
 
+
     def set(self, color):
         '''
         Sets the color or calls draw cross for transparent pixels
@@ -212,6 +221,7 @@ class Pixel:
                 pygame.draw.rect(self.image, (100,100,100), (0,0,self.size, self.size), 1)
                 self.color = color
 
+
     def check_pos(self, pos):
         '''
         check for mouseclick
@@ -224,7 +234,8 @@ class Pixel:
         draws on surface parameter
         '''    
         surface.blit(self.image, (self.x, self.y))
-        
+
+
 
 class Tile_Editor:
     '''
@@ -276,46 +287,49 @@ class Tile_Editor:
         
 
         self.buttons.append(Button(self, (sx,sy), id = "brush", callback = self._handle_button,
-            img = load_file(get_dir_path("images", "brush_btn.png")).convert()))
+            img = load_image(get_dir_path("images", "brush_btn.png")).convert()))
         sy += self.buttons[-1].get_height() + 10
 
         self.buttons.append(Button(self, (sx,sy), id = "fill", callback = self._handle_button,
-            img = load_file(get_dir_path("images", "fill_btn.png")).convert()))
+            img = load_image(get_dir_path("images", "fill_btn.png")).convert()))
         sy += self.buttons[-1].get_height() + 10
         self._cursor_bottom = sy - 5
 
         sy += 10
         # Add Load and new buttons
+        # width, height, bg_color = (255,255,255), label = ''
+        # btn_img = create_button_image(50, 25, label = "Load", font_size = 24) 
         self.buttons.append(Button(self, (sx,sy), id = "load", callback = self._handle_button,
-            img = load_file(get_dir_path("images", "load_btn.png")).convert()))
+            img = load_image(get_dir_path("images", "load_btn.png")).convert()))
+
         sy += self.buttons[-1].get_height() + 10
 
         self.buttons.append(Button(self, (sx,sy), id = "new", callback = self._handle_button,
-            img = load_file(get_dir_path("images", "new_btn.png")).convert()))
+            img = load_image(get_dir_path("images", "new_btn.png")).convert()))
         sy += self.buttons[-1].get_height() + 10
 
         self.buttons.append(Button(self, (sx,sy), id = "update", callback = self._handle_button,
-            img = load_file(get_dir_path("images", "update_btn.png")).convert()))
+            img = load_image(get_dir_path("images", "update_btn.png")).convert()))
         sy += self.buttons[-1].get_height() + 10
 
         # self.auto_update_cb = Check_Box(sx +10, sy - 5, id="auto_update", label = "Auto Update", 
-        #     img = load_file(get_dir_path("images", "cb_open.png")),
-        #     img_selected = load_file(get_dir_path("images", "cb_selected.png")),
+        #     img = load_image(get_dir_path("images", "cb_open.png")),
+        #     img_selected = load_image(get_dir_path("images", "cb_selected.png")),
         #     callback = self._handle_checkbox)
         # sy += self.auto_update_cb.get_height() + 5
         
         # Add save buttons
         self.buttons.append(Button(self, (sx,sy), id = "save", callback = self._handle_button,
-            img = load_file(get_dir_path("images", "save_btn.png")).convert()))
+            img = load_image(get_dir_path("images", "save_btn.png")).convert()))
         sy += self.buttons[-1].get_height() + 10
 
         self.buttons.append(Button(self, (sx,sy), id = "saveas", callback = self._handle_button,
-            img = load_file(get_dir_path("images", "saveas_btn.png")).convert()))
+            img = load_image(get_dir_path("images", "saveas_btn.png")).convert()))
         sy += self.buttons[-1].get_height() + 10
 
         # Add grid and 2x grid backgrounds
         # TODO: Consider adding button to hide grid 
-        self.grid = load_file(get_dir_path("images", "grid.png")).convert()
+        self.grid = load_image(get_dir_path("images", "grid.png")).convert()
         sw, sh = self.grid.get_size()
         self.grid_rect = pygame.Rect(sx, sy, sw, sh)
 
@@ -325,9 +339,9 @@ class Tile_Editor:
 
         sy += (sh * 2) + 10
         self.copy_btn = Button(self, (sx,sy), id = "copy", callback = self._handle_button,
-            img = load_file(get_dir_path("images", "copy_btn.png")).convert())      
+            img = load_image(get_dir_path("images", "copy_btn.png")).convert())      
         self.paste_btn = Button(self, (sx,sy), id = "paste", callback = self._handle_button,
-            img = load_file(get_dir_path("images", "paste_btn.png")).convert())
+            img = load_image(get_dir_path("images", "paste_btn.png")).convert())
         self.paste_btn.set_enabled(False)
 
         self.buttons.append(self.copy_btn)
@@ -350,18 +364,22 @@ class Tile_Editor:
 
         self._not_ready = ["save", ""]
 
+
     @property
     def cursor(self):
         return self._cursor
+
 
     @property
     def right(self):
         return self._right
 
+
     def set_dirty(self, dirty = True):
         self.dirty = dirty
         if dirty:
             self.changed = True
+
 
     def _update(self):
         '''
@@ -375,6 +393,7 @@ class Tile_Editor:
                     self.preview.set_at((x,y), self.pixels[x][y].get_color())
             self.dirty = False
 
+
     def _check_pixels_pos(self, pos):
         '''
         Checks if mouse click occurred in the editor
@@ -386,6 +405,7 @@ class Tile_Editor:
                 if self.pixels[x][y].check_pos(pos):
                     return x, y
         return -1, -1
+
 
     def set_image(self,image):
         '''
@@ -408,9 +428,11 @@ class Tile_Editor:
         
             image.unlock()
 
+
     def _handle_checkbox(self, id, selected):
         if id == "auto_update":
             self.auto_update = selected
+
 
     def _fill(self, pos, check, color, caller = None):
         x, y = pos
@@ -422,7 +444,7 @@ class Tile_Editor:
                     nx, ny = n
                     if self.pixels[nx][ny].get_color() == check:
                         self._fill(n, check, color, pos)
-                            
+
 
     def _handle_button(self, id):
         '''
@@ -454,6 +476,7 @@ class Tile_Editor:
         elif id == "copy" or id == "paste":
             self._handle_copy_paste(id)
 
+
     def _handle_copy_paste(self, id):
         if id == "copy":
             self._copy_paste.lock()
@@ -476,6 +499,7 @@ class Tile_Editor:
         for b in self.buttons:
             if b.id == "copy" or b.id == "paste":
                 b.set_enabled(id != b.id)      
+
 
     def handle_click(self, pos, button):
         '''
@@ -501,16 +525,18 @@ class Tile_Editor:
         #     self.auto_update_cb.on_click()
         else:
             for b in self.buttons:
-                if b.check_mouse(pos):
+                if b.check_mousepos(pos):
                     b.on_click()                    
                     break
 
+
     def _check_button_mouseover(self, button_ids, mouse_pos):
         for b in self.buttons:
-            if b.id in button_ids and b.check_mouse(mouse_pos):
+            if b.id in button_ids and b.check_mousepos(mouse_pos):
                 return True
         
         return False
+
 
     def check_mouseover(self, mouse_pos):
         if self.rect.collidepoint(mouse_pos):

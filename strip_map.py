@@ -16,7 +16,7 @@ class Strip_Map:
 
     def load_strip(self, filename):
 
-        self.image = load_file(filename)
+        self.image = load_image(filename)
 
         if self.image:        
             self.image2x = pygame.transform.scale2x(self.image)
@@ -97,31 +97,31 @@ class Anim_Panel:
         sx, sy = self.x + (self.width // 2 - 125), self.y + 10
         # parent, pos = (0, 0), id = 'btn', img = None, callback = None):
         self.buttons.append(Button(self, (sx, sy), id = "pause", callback = self._handle_button,
-            img = load_file(get_dir_path("images", "pause_btn.png")).convert()))
+            img = load_image(get_dir_path("images", "pause_btn.png")).convert()))
         sx += self.buttons[-1].get_width() + 10
 
         self.buttons.append(Button(self, (sx, sy), id = "play", callback = self._handle_button,
-            img = load_file(get_dir_path("images", "play_btn.png")).convert()))
+            img = load_image(get_dir_path("images", "play_btn.png")).convert()))
         sx += self.buttons[-1].get_width() + 10
 
         self.buttons.append(Button(self, (sx, sy), id = "dec", callback = self._handle_button,
-            img = load_file(get_dir_path("images", "dec_btn.png")).convert()))
+            img = load_image(get_dir_path("images", "dec_btn.png")).convert()))
         sx += self.buttons[-1].get_width() + 10
 
         self.buttons.append(Button(self, (sx, sy), id = "inc", callback = self._handle_button,
-            img = load_file(get_dir_path("images", "inc_btn.png")).convert()))
+            img = load_image(get_dir_path("images", "inc_btn.png")).convert()))
         sx += self.buttons[-1].get_width() + 10
 
         self.buttons.append(Button(self, (sx, sy), id = "fr14", callback = self._handle_button,
-            img = load_file(get_dir_path("images", "fr14_btn.png")).convert()))
+            img = load_image(get_dir_path("images", "fr14_btn.png")).convert()))
         sx += self.buttons[-1].get_width() + 10
 
         self.buttons.append(Button(self, (sx, sy), id = "fr28", callback = self._handle_button,
-            img = load_file(get_dir_path("images", "fr28_btn.png")).convert()))
+            img = load_image(get_dir_path("images", "fr28_btn.png")).convert()))
         sx += self.buttons[-1].get_width() + 10
 
         self.buttons.append(Button(self, (sx, sy), id = "clear", callback = self._handle_button,
-            img = load_file(get_dir_path("images", "x_btn.png")).convert()))
+            img = load_image(get_dir_path("images", "x_btn.png")).convert()))
         sx += self.buttons[-1].get_width() + 10
         
         self.strip_rect = pygame.Rect((self.buttons[0].left, self.y + self.buttons[-1].get_height() + 20, 16, 256))
@@ -191,7 +191,7 @@ class Anim_Panel:
 
     def handle_click(self, pos, btn):
         for b in self.buttons:
-            if b.check_mouse(pos):
+            if b.check_mousepos(pos):
                 b.on_click()
                 break
 

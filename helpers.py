@@ -2,6 +2,26 @@
 import pygame
 import os
 
+
+def create_button_image(width, height, bg_color = (255,255,255), label = '', font_name = None, font_size = 16):
+    
+    image = pygame.Surface((width, height))
+    image.fill(bg_color)
+    w, h = image.get_size()
+
+    tr = get_text_rendered(label, font_size = font_size)
+    tw, th = tr.get_size()
+    image.blit(tr, (w // 2 - tw // 2, h // 2 - th // 2))
+
+    # DARKGREY = (50,50,50)
+    # LIGHTGREY = (500,200,200)
+    # # pygame.draw.line(image, DARKGREY, False, (0, 0), (0, height))
+    # # pygame.draw.line(image, DARKGREY, False, (0,0) ,(width, 0))
+    # pygame.draw.rect(image, DARKGREY, (0,0,width, height), 1)
+
+    return image
+
+
 def set_cursor_from_image(image, hotspot = (0,0)):
     #if os.path.isfile((cwd+'/'+image)):
     w,h = image.get_size()
@@ -27,9 +47,11 @@ def set_cursor_from_image(image, hotspot = (0,0)):
         new_cursor = pygame.cursors.compile(strings)
         pygame.mouse.set_cursor(size, hotspot, *new_cursor)
 
+
 def get_text_rendered(text, color = (0,0,0), font_name = None, font_size = 14):
     font = pygame.font.Font(font_name, font_size)
     return font.render(text, True, color)
+
 
 def get_dir_path(dirname = "", filename=None):
     cwd = os.getcwd()
@@ -69,7 +91,7 @@ def get_file_list(dir):
 
     return files
 
-def load_file(filename):
+def load_image(filename):
     image = None
     try:
         image = pygame.image.load(filename).convert()
